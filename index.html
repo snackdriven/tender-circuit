@@ -494,6 +494,13 @@
         color: var(--ctp-green);
       }
 
+      .todo-actions {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+      }
+
+      .edit-btn,
       .delete-btn {
         background: none;
         border: none;
@@ -509,15 +516,186 @@
         min-block-size: var(--touch-min);
         justify-content: center;
 
-        &:hover {
-          color: var(--ctp-red);
-          background: var(--ctp-surface1);
-        }
-
         & svg {
           inline-size: 18px;
           block-size: 18px;
         }
+      }
+
+      .edit-btn:hover {
+        color: var(--ctp-blue);
+        background: var(--ctp-surface1);
+      }
+
+      .delete-btn:hover {
+        color: var(--ctp-red);
+        background: var(--ctp-surface1);
+      }
+
+      /* Inline edit form */
+      .todo-item.editing {
+        flex-wrap: wrap;
+      }
+
+      .edit-form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-sm);
+        inline-size: 100%;
+        padding-block-start: var(--space-sm);
+      }
+
+      .edit-form input[type="text"] {
+        padding: var(--space-sm) var(--space-md);
+        border: 2px solid var(--ctp-surface2);
+        border-radius: var(--radius-md);
+        background: var(--ctp-mantle);
+        color: var(--ctp-text);
+        font-family: inherit;
+        font-size: 0.95rem;
+        outline: none;
+        transition: border-color 0.2s;
+
+        &:focus {
+          border-color: var(--ctp-mauve);
+        }
+      }
+
+      .edit-form-row {
+        display: flex;
+        gap: var(--space-sm);
+        flex-wrap: wrap;
+      }
+
+      .edit-form select,
+      .edit-form input[type="date"] {
+        flex: 1;
+        padding: var(--space-sm) var(--space-md);
+        border: 2px solid var(--ctp-surface2);
+        border-radius: var(--radius-md);
+        background: var(--ctp-mantle);
+        color: var(--ctp-text);
+        font-family: inherit;
+        font-size: 0.85rem;
+        outline: none;
+        min-block-size: 36px;
+        cursor: pointer;
+
+        &:focus {
+          border-color: var(--ctp-mauve);
+        }
+      }
+
+      .edit-form input[type="date"] {
+        color-scheme: dark;
+
+        &::-webkit-calendar-picker-indicator {
+          filter: invert(0.7);
+          cursor: pointer;
+        }
+      }
+
+      .edit-form-actions {
+        display: flex;
+        gap: var(--space-sm);
+        justify-content: flex-end;
+      }
+
+      .edit-form-actions button {
+        padding: var(--space-xs) var(--space-md);
+        border: none;
+        border-radius: var(--radius-md);
+        font-family: inherit;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        min-block-size: 32px;
+        transition: background 0.2s, transform 0.1s;
+
+        &:active {
+          transform: scale(0.96);
+        }
+      }
+
+      .edit-save-btn {
+        background: var(--ctp-green);
+        color: var(--ctp-crust);
+
+        &:hover {
+          background: color-mix(in oklch, var(--ctp-green), var(--ctp-teal) 40%);
+        }
+      }
+
+      .edit-cancel-btn {
+        background: var(--ctp-surface1);
+        color: var(--ctp-subtext0);
+
+        &:hover {
+          background: var(--ctp-surface2);
+        }
+      }
+
+      /* Undo toast */
+      .toast-container {
+        position: fixed;
+        inset-block-end: env(safe-area-inset-bottom, var(--space-2xl));
+        inset-inline: 0;
+        display: flex;
+        justify-content: center;
+        padding-inline: var(--space-lg);
+        pointer-events: none;
+        z-index: 100;
+      }
+
+      .toast {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        padding: var(--space-md) var(--space-lg);
+        background: var(--ctp-surface1);
+        border-radius: var(--radius-lg);
+        color: var(--ctp-text);
+        font-size: 0.85rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        pointer-events: auto;
+        animation: toast-in 0.25s ease-out;
+        max-inline-size: 400px;
+      }
+
+      .toast.toast-out {
+        animation: toast-out 0.2s ease-in forwards;
+      }
+
+      .toast-message {
+        flex: 1;
+      }
+
+      .toast-undo-btn {
+        padding: var(--space-xs) var(--space-md);
+        border: none;
+        border-radius: var(--radius-md);
+        background: var(--ctp-mauve);
+        color: var(--ctp-crust);
+        font-family: inherit;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background 0.2s;
+
+        &:hover {
+          background: color-mix(in oklch, var(--ctp-mauve), var(--ctp-lavender) 50%);
+        }
+      }
+
+      @keyframes toast-in {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes toast-out {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(12px); }
       }
 
       /* Empty state */
@@ -639,8 +817,11 @@
     <button class="clear-completed" id="clear-completed" style="display:none;">Clear completed</button>
   </main>
 
+  <div class="toast-container" id="toast-container"></div>
+
   <script>
     const STORAGE_KEY = 'catppuccin-todos';
+    const MAX_UNDO = 50;
 
     const CATEGORIES = {
       general:  { label: 'General',  color: 'var(--ctp-overlay2)' },
@@ -656,6 +837,9 @@
     let currentCategory = 'all';
     let currentSort = 'newest';
     let lastAddedId = null;
+    let editingId = null;
+    let undoStack = [];
+    let toastTimer = null;
 
     const input = document.getElementById('todo-input');
     const addBtn = document.getElementById('add-btn');
@@ -667,6 +851,7 @@
     const dueDateInput = document.getElementById('due-date-input');
     const sortSelect = document.getElementById('sort-select');
     const categoryFilterBtns = document.querySelectorAll('#category-filters button');
+    const toastContainer = document.getElementById('toast-container');
 
     function loadTodos() {
       try {
@@ -699,9 +884,49 @@
       }
     }
 
+    // --- Undo system ---
+    function pushUndo(label) {
+      undoStack.push({ label, snapshot: JSON.stringify(todos) });
+      if (undoStack.length > MAX_UNDO) undoStack.shift();
+    }
+
+    function undo() {
+      if (undoStack.length === 0) return;
+      const entry = undoStack.pop();
+      todos = JSON.parse(entry.snapshot);
+      editingId = null;
+      save();
+      render();
+      dismissToast();
+    }
+
+    function showToast(message) {
+      dismissToast();
+      toastContainer.innerHTML = `
+        <div class="toast">
+          <span class="toast-message">${escapeHtml(message)}</span>
+          <button class="toast-undo-btn" id="toast-undo">Undo</button>
+        </div>`;
+      document.getElementById('toast-undo').addEventListener('click', undo);
+      toastTimer = setTimeout(() => dismissToast(), 5000);
+    }
+
+    function dismissToast() {
+      clearTimeout(toastTimer);
+      const toast = toastContainer.querySelector('.toast');
+      if (toast) {
+        toast.classList.add('toast-out');
+        toast.addEventListener('animationend', () => {
+          toastContainer.innerHTML = '';
+        }, { once: true });
+      }
+    }
+
+    // --- CRUD operations ---
     function addTodo(text) {
       text = text.trim();
       if (!text) return;
+      pushUndo('Task added');
       const id = crypto.randomUUID();
       lastAddedId = id;
       const category = categorySelect.value;
@@ -709,6 +934,7 @@
       todos.unshift({ id, text, completed: false, category, createdAt: Date.now(), dueDate });
       save();
       render();
+      showToast('Task added');
       input.value = '';
       dueDateInput.value = '';
       input.focus();
@@ -716,23 +942,77 @@
 
     function toggleTodo(id) {
       const todo = todos.find(t => t.id === id);
-      if (todo) todo.completed = !todo.completed;
+      if (!todo) return;
+      const label = todo.completed ? 'Marked active' : 'Marked done';
+      pushUndo(label);
+      todo.completed = !todo.completed;
       save();
       render();
+      showToast(label);
     }
 
     function deleteTodo(id) {
+      const todo = todos.find(t => t.id === id);
+      pushUndo('Task deleted');
       todos = todos.filter(t => t.id !== id);
       save();
       render();
+      showToast(`Deleted "${todo ? todo.text.slice(0, 30) : 'task'}${todo && todo.text.length > 30 ? '...' : ''}"`);
     }
 
     function clearCompleted() {
+      const count = todos.filter(t => t.completed).length;
+      if (count === 0) return;
+      pushUndo('Cleared completed');
       todos = todos.filter(t => !t.completed);
       save();
       render();
+      showToast(`Cleared ${count} completed task${count !== 1 ? 's' : ''}`);
     }
 
+    function startEdit(id) {
+      editingId = id;
+      render();
+      const editInput = list.querySelector('.edit-form input[type="text"]');
+      if (editInput) {
+        editInput.focus();
+        editInput.setSelectionRange(editInput.value.length, editInput.value.length);
+      }
+    }
+
+    function saveEdit(id) {
+      const form = list.querySelector(`.todo-item[data-id="${CSS.escape(id)}"] .edit-form`);
+      if (!form) return;
+      const newText = form.querySelector('input[type="text"]').value.trim();
+      if (!newText) return;
+      const newCategory = form.querySelector('select').value;
+      const newDueDate = form.querySelector('input[type="date"]').value || null;
+
+      const todo = todos.find(t => t.id === id);
+      if (!todo) return;
+
+      if (todo.text === newText && todo.category === newCategory && todo.dueDate === newDueDate) {
+        editingId = null;
+        render();
+        return;
+      }
+
+      pushUndo('Task edited');
+      todo.text = newText;
+      todo.category = newCategory;
+      todo.dueDate = newDueDate;
+      editingId = null;
+      save();
+      render();
+      showToast('Task updated');
+    }
+
+    function cancelEdit() {
+      editingId = null;
+      render();
+    }
+
+    // --- Filtering & sorting ---
     function getFiltered() {
       let result = todos;
 
@@ -807,6 +1087,7 @@
       return { text, cls };
     }
 
+    // --- Rendering helpers ---
     function escapeAttr(str) {
       return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
@@ -815,6 +1096,27 @@
       const div = document.createElement('div');
       div.textContent = str;
       return div.innerHTML;
+    }
+
+    function categoryOptionsHtml(selected) {
+      return Object.entries(CATEGORIES).map(([key, cat]) =>
+        `<option value="${key}" ${key === selected ? 'selected' : ''}>${escapeHtml(cat.label)}</option>`
+      ).join('');
+    }
+
+    function renderEditForm(todo) {
+      return `
+        <div class="edit-form">
+          <input type="text" value="${escapeAttr(todo.text)}" maxlength="500" aria-label="Edit task text">
+          <div class="edit-form-row">
+            <select aria-label="Edit category">${categoryOptionsHtml(todo.category)}</select>
+            <input type="date" value="${todo.dueDate || ''}" aria-label="Edit due date">
+          </div>
+          <div class="edit-form-actions">
+            <button class="edit-cancel-btn" data-action="cancel-edit">Cancel</button>
+            <button class="edit-save-btn" data-action="save-edit">Save</button>
+          </div>
+        </div>`;
     }
 
     function render() {
@@ -841,11 +1143,22 @@
 
       list.innerHTML = filtered.map(todo => {
         const isNew = todo.id === lastAddedId;
+        const isEditing = todo.id === editingId;
         const escapedText = escapeHtml(todo.text);
         const escapedId = escapeAttr(todo.id);
         const statusLabel = todo.completed ? 'incomplete' : 'complete';
         const cat = CATEGORIES[todo.category] || CATEGORIES.general;
         const countdown = formatCountdown(todo.dueDate);
+
+        if (isEditing) {
+          return `
+          <li class="todo-item editing" data-id="${escapedId}">
+            <div class="todo-content">
+              <span class="todo-text">${escapedText}</span>
+            </div>
+            ${renderEditForm(todo)}
+          </li>`;
+        }
 
         let metaHtml = '';
         const hasMeta = todo.category !== 'general' || countdown;
@@ -872,18 +1185,25 @@
             <span class="todo-text">${escapedText}</span>
             ${metaHtml}
           </div>
-          <button class="delete-btn" aria-label="Delete ${escapeAttr(todo.text)}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
+          <div class="todo-actions">
+            <button class="edit-btn" aria-label="Edit ${escapeAttr(todo.text)}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>
+              </svg>
+            </button>
+            <button class="delete-btn" aria-label="Delete ${escapeAttr(todo.text)}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
         </li>`;
       }).join('');
 
       lastAddedId = null;
     }
 
-    // Event listeners
+    // --- Event listeners ---
     addBtn.addEventListener('click', () => addTodo(input.value));
 
     input.addEventListener('keydown', e => {
@@ -898,10 +1218,35 @@
     });
 
     list.addEventListener('click', e => {
-      const btn = e.target.closest('.delete-btn');
-      if (btn) {
-        const id = btn.closest('.todo-item').dataset.id;
+      const item = e.target.closest('.todo-item');
+      if (!item) return;
+      const id = item.dataset.id;
+
+      if (e.target.closest('.delete-btn')) {
         deleteTodo(id);
+        return;
+      }
+
+      if (e.target.closest('.edit-btn')) {
+        startEdit(id);
+        return;
+      }
+
+      const action = e.target.closest('[data-action]');
+      if (action) {
+        if (action.dataset.action === 'save-edit') saveEdit(id);
+        if (action.dataset.action === 'cancel-edit') cancelEdit();
+      }
+    });
+
+    list.addEventListener('keydown', e => {
+      if (!editingId) return;
+      if (e.key === 'Enter' && e.target.matches('.edit-form input[type="text"]')) {
+        e.preventDefault();
+        saveEdit(editingId);
+      }
+      if (e.key === 'Escape') {
+        cancelEdit();
       }
     });
 
@@ -934,8 +1279,19 @@
       });
     });
 
+    // Ctrl+Z / Cmd+Z for undo
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        if (e.target.matches('input, textarea, select')) return;
+        e.preventDefault();
+        undo();
+      }
+    });
+
     // Update countdowns every minute
-    setInterval(() => render(), 60_000);
+    setInterval(() => {
+      if (!editingId) render();
+    }, 60_000);
 
     // Initial render
     render();
