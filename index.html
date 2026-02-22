@@ -138,7 +138,7 @@
         display: flex;
         gap: var(--space-sm);
 
-        & input {
+        & input[type="text"] {
           flex: 1;
           padding: var(--space-md) var(--space-lg);
           border: 2px solid var(--ctp-surface1);
@@ -185,19 +185,70 @@
         }
       }
 
+      /* Options row (category + due date) */
+      .options-row {
+        display: flex;
+        gap: var(--space-sm);
+        flex-wrap: wrap;
+      }
+
+      .options-row select,
+      .options-row input[type="date"] {
+        padding: var(--space-sm) var(--space-md);
+        border: 2px solid var(--ctp-surface1);
+        border-radius: var(--radius-md);
+        background: var(--ctp-surface0);
+        color: var(--ctp-text);
+        font-family: inherit;
+        font-size: 0.85rem;
+        outline: none;
+        transition: border-color 0.2s;
+        min-block-size: var(--touch-min);
+
+        &:focus {
+          border-color: var(--ctp-mauve);
+          outline: 2px solid var(--ctp-mauve);
+          outline-offset: 2px;
+        }
+      }
+
+      .options-row select {
+        flex: 1;
+        min-inline-size: 0;
+        cursor: pointer;
+      }
+
+      .options-row input[type="date"] {
+        flex: 1;
+        min-inline-size: 0;
+        color-scheme: dark;
+
+        &::-webkit-calendar-picker-indicator {
+          filter: invert(0.7);
+          cursor: pointer;
+        }
+      }
+
       /* Focus outlines for keyboard navigation */
       :focus-visible {
         outline: 2px solid var(--ctp-mauve);
         outline-offset: 2px;
       }
 
-      /* Filter tabs */
+      /* Filter and sort bar */
+      .toolbar {
+        display: flex;
+        gap: var(--space-sm);
+        align-items: stretch;
+      }
+
       .filters {
         display: flex;
         gap: var(--space-xs);
         background: var(--ctp-mantle);
         padding: var(--space-xs);
         border-radius: var(--radius-lg);
+        flex: 1;
 
         & button {
           flex: 1;
@@ -221,6 +272,70 @@
 
           &:hover:not(.active) {
             color: var(--ctp-subtext0);
+          }
+        }
+      }
+
+      .sort-select {
+        padding: var(--space-sm) var(--space-md);
+        border: none;
+        border-radius: var(--radius-lg);
+        background: var(--ctp-mantle);
+        color: var(--ctp-overlay1);
+        font-family: inherit;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        outline: none;
+        min-block-size: var(--touch-min);
+        transition: color 0.2s;
+
+        &:focus {
+          outline: 2px solid var(--ctp-mauve);
+          outline-offset: 2px;
+        }
+
+        &:hover {
+          color: var(--ctp-subtext0);
+        }
+      }
+
+      /* Category filter bar */
+      .category-filters {
+        display: flex;
+        gap: var(--space-xs);
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        padding-block: 2px;
+
+        &::-webkit-scrollbar {
+          display: none;
+        }
+
+        & button {
+          padding: var(--space-xs) var(--space-md);
+          border: 1.5px solid var(--ctp-surface2);
+          border-radius: var(--radius-full);
+          background: transparent;
+          color: var(--ctp-overlay1);
+          font-family: inherit;
+          font-size: 0.75rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: background 0.2s, color 0.2s, border-color 0.2s;
+          white-space: nowrap;
+          min-block-size: 32px;
+
+          &.active {
+            background: var(--ctp-surface0);
+            color: var(--ctp-text);
+            border-color: var(--ctp-surface0);
+          }
+
+          &:hover:not(.active) {
+            color: var(--ctp-subtext0);
+            border-color: var(--ctp-overlay0);
           }
         }
       }
@@ -314,11 +429,69 @@
         }
       }
 
-      .todo-text {
+      .todo-content {
         flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        overflow: hidden;
+      }
+
+      .todo-text {
         font-size: 0.95rem;
         color: var(--ctp-text);
         overflow-wrap: break-word;
+      }
+
+      .todo-meta {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        flex-wrap: wrap;
+      }
+
+      .category-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        padding: 1px var(--space-sm);
+        border-radius: var(--radius-full);
+        background: color-mix(in oklch, var(--badge-color) 15%, transparent);
+        color: var(--badge-color);
+        letter-spacing: 0.01em;
+      }
+
+      .category-dot {
+        inline-size: 6px;
+        block-size: 6px;
+        border-radius: 50%;
+        background: var(--badge-color);
+      }
+
+      .countdown {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        font-weight: 500;
+        padding: 1px var(--space-sm);
+        border-radius: var(--radius-full);
+        letter-spacing: 0;
+      }
+
+      .countdown.overdue {
+        background: color-mix(in oklch, var(--ctp-red) 15%, transparent);
+        color: var(--ctp-red);
+      }
+
+      .countdown.due-soon {
+        background: color-mix(in oklch, var(--ctp-peach) 15%, transparent);
+        color: var(--ctp-peach);
+      }
+
+      .countdown.due-later {
+        background: color-mix(in oklch, var(--ctp-green) 15%, transparent);
+        color: var(--ctp-green);
       }
 
       .delete-btn {
@@ -424,10 +597,41 @@
       <button id="add-btn">Add</button>
     </div>
 
-    <div class="filters" role="tablist" aria-label="Filter todos">
-      <button class="active" role="tab" aria-selected="true" data-filter="all">All</button>
-      <button role="tab" aria-selected="false" data-filter="active">Active</button>
-      <button role="tab" aria-selected="false" data-filter="completed">Done</button>
+    <div class="options-row">
+      <select id="category-select" aria-label="Category">
+        <option value="general">General</option>
+        <option value="work">Work</option>
+        <option value="personal">Personal</option>
+        <option value="health">Health</option>
+        <option value="finance">Finance</option>
+        <option value="learning">Learning</option>
+      </select>
+      <input type="date" id="due-date-input" aria-label="Due date (optional)">
+    </div>
+
+    <div class="toolbar">
+      <div class="filters" role="tablist" aria-label="Filter todos">
+        <button class="active" role="tab" aria-selected="true" data-filter="all">All</button>
+        <button role="tab" aria-selected="false" data-filter="active">Active</button>
+        <button role="tab" aria-selected="false" data-filter="completed">Done</button>
+      </div>
+      <select class="sort-select" id="sort-select" aria-label="Sort todos">
+        <option value="newest">Newest</option>
+        <option value="oldest">Oldest</option>
+        <option value="alpha-az">A &rarr; Z</option>
+        <option value="alpha-za">Z &rarr; A</option>
+        <option value="category">Category</option>
+        <option value="due-date">Due date</option>
+      </select>
+    </div>
+
+    <div class="category-filters" id="category-filters" aria-label="Filter by category">
+      <button class="active" data-category="all">All</button>
+      <button data-category="work">Work</button>
+      <button data-category="personal">Personal</button>
+      <button data-category="health">Health</button>
+      <button data-category="finance">Finance</button>
+      <button data-category="learning">Learning</button>
     </div>
 
     <ul class="todo-list" id="todo-list" aria-live="polite"></ul>
@@ -438,8 +642,19 @@
   <script>
     const STORAGE_KEY = 'catppuccin-todos';
 
+    const CATEGORIES = {
+      general:  { label: 'General',  color: 'var(--ctp-overlay2)' },
+      work:     { label: 'Work',     color: 'var(--ctp-blue)' },
+      personal: { label: 'Personal', color: 'var(--ctp-mauve)' },
+      health:   { label: 'Health',   color: 'var(--ctp-green)' },
+      finance:  { label: 'Finance',  color: 'var(--ctp-yellow)' },
+      learning: { label: 'Learning', color: 'var(--ctp-sapphire)' },
+    };
+
     let todos = loadTodos();
     let currentFilter = 'all';
+    let currentCategory = 'all';
+    let currentSort = 'newest';
     let lastAddedId = null;
 
     const input = document.getElementById('todo-input');
@@ -448,16 +663,29 @@
     const taskCount = document.getElementById('task-count');
     const clearBtn = document.getElementById('clear-completed');
     const filterBtns = document.querySelectorAll('.filters button');
+    const categorySelect = document.getElementById('category-select');
+    const dueDateInput = document.getElementById('due-date-input');
+    const sortSelect = document.getElementById('sort-select');
+    const categoryFilterBtns = document.querySelectorAll('#category-filters button');
 
     function loadTodos() {
       try {
         const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
         if (!Array.isArray(data)) return [];
-        return data.filter(item =>
-          item && typeof item.id === 'string' &&
-          typeof item.text === 'string' &&
-          typeof item.completed === 'boolean'
-        );
+        return data
+          .filter(item =>
+            item && typeof item.id === 'string' &&
+            typeof item.text === 'string' &&
+            typeof item.completed === 'boolean'
+          )
+          .map(item => ({
+            id: item.id,
+            text: item.text,
+            completed: item.completed,
+            category: item.category && CATEGORIES[item.category] ? item.category : 'general',
+            createdAt: item.createdAt || Date.now(),
+            dueDate: item.dueDate || null,
+          }));
       } catch {
         return [];
       }
@@ -476,10 +704,13 @@
       if (!text) return;
       const id = crypto.randomUUID();
       lastAddedId = id;
-      todos.unshift({ id, text, completed: false });
+      const category = categorySelect.value;
+      const dueDate = dueDateInput.value || null;
+      todos.unshift({ id, text, completed: false, category, createdAt: Date.now(), dueDate });
       save();
       render();
       input.value = '';
+      dueDateInput.value = '';
       input.focus();
     }
 
@@ -503,9 +734,77 @@
     }
 
     function getFiltered() {
-      if (currentFilter === 'active') return todos.filter(t => !t.completed);
-      if (currentFilter === 'completed') return todos.filter(t => t.completed);
-      return todos;
+      let result = todos;
+
+      if (currentFilter === 'active') result = result.filter(t => !t.completed);
+      if (currentFilter === 'completed') result = result.filter(t => t.completed);
+
+      if (currentCategory !== 'all') {
+        result = result.filter(t => t.category === currentCategory);
+      }
+
+      return result;
+    }
+
+    function getSorted(items) {
+      const sorted = [...items];
+      switch (currentSort) {
+        case 'newest':
+          sorted.sort((a, b) => b.createdAt - a.createdAt);
+          break;
+        case 'oldest':
+          sorted.sort((a, b) => a.createdAt - b.createdAt);
+          break;
+        case 'alpha-az':
+          sorted.sort((a, b) => a.text.localeCompare(b.text));
+          break;
+        case 'alpha-za':
+          sorted.sort((a, b) => b.text.localeCompare(a.text));
+          break;
+        case 'category':
+          sorted.sort((a, b) => a.category.localeCompare(b.category));
+          break;
+        case 'due-date':
+          sorted.sort((a, b) => {
+            if (!a.dueDate && !b.dueDate) return 0;
+            if (!a.dueDate) return 1;
+            if (!b.dueDate) return -1;
+            return a.dueDate.localeCompare(b.dueDate);
+          });
+          break;
+      }
+      return sorted;
+    }
+
+    function formatCountdown(dueDate) {
+      if (!dueDate) return null;
+      const now = new Date();
+      const due = new Date(dueDate + 'T23:59:59');
+      const diffMs = due - now;
+      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+      let text;
+      let cls;
+
+      if (diffDays < 0) {
+        const overdueDays = Math.abs(diffDays);
+        text = overdueDays === 1 ? '1d overdue' : `${overdueDays}d overdue`;
+        cls = 'overdue';
+      } else if (diffDays === 0) {
+        text = 'Due today';
+        cls = 'due-soon';
+      } else if (diffDays === 1) {
+        text = 'Due tomorrow';
+        cls = 'due-soon';
+      } else if (diffDays <= 3) {
+        text = `${diffDays}d left`;
+        cls = 'due-soon';
+      } else {
+        text = `${diffDays}d left`;
+        cls = 'due-later';
+      }
+
+      return { text, cls };
     }
 
     function escapeAttr(str) {
@@ -519,7 +818,7 @@
     }
 
     function render() {
-      const filtered = getFiltered();
+      const filtered = getSorted(getFiltered());
       const activeCount = todos.filter(t => !t.completed).length;
       const completedCount = todos.filter(t => t.completed).length;
 
@@ -530,6 +829,7 @@
         let msg = 'Add a task to get started';
         if (currentFilter === 'active') msg = 'No active tasks';
         if (currentFilter === 'completed') msg = 'No completed tasks';
+        if (currentCategory !== 'all') msg = `No ${CATEGORIES[currentCategory]?.label || ''} tasks`.trim();
         list.innerHTML = `
           <li class="empty-state">
             <div class="icon">${currentFilter === 'completed' ? '\u2713' : '\u2610'}</div>
@@ -544,6 +844,22 @@
         const escapedText = escapeHtml(todo.text);
         const escapedId = escapeAttr(todo.id);
         const statusLabel = todo.completed ? 'incomplete' : 'complete';
+        const cat = CATEGORIES[todo.category] || CATEGORIES.general;
+        const countdown = formatCountdown(todo.dueDate);
+
+        let metaHtml = '';
+        const hasMeta = todo.category !== 'general' || countdown;
+        if (hasMeta) {
+          metaHtml = '<div class="todo-meta">';
+          if (todo.category !== 'general') {
+            metaHtml += `<span class="category-badge" style="--badge-color: ${cat.color}"><span class="category-dot"></span>${escapeHtml(cat.label)}</span>`;
+          }
+          if (countdown) {
+            metaHtml += `<span class="countdown ${countdown.cls}">${escapeHtml(countdown.text)}</span>`;
+          }
+          metaHtml += '</div>';
+        }
+
         return `
         <li class="todo-item ${todo.completed ? 'completed' : ''} ${isNew ? 'new-item' : ''}" data-id="${escapedId}">
           <label class="checkbox">
@@ -552,7 +868,10 @@
               <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
             </span>
           </label>
-          <span class="todo-text">${escapedText}</span>
+          <div class="todo-content">
+            <span class="todo-text">${escapedText}</span>
+            ${metaHtml}
+          </div>
           <button class="delete-btn" aria-label="Delete ${escapeAttr(todo.text)}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -600,6 +919,23 @@
         render();
       });
     });
+
+    sortSelect.addEventListener('change', () => {
+      currentSort = sortSelect.value;
+      render();
+    });
+
+    categoryFilterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        categoryFilterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentCategory = btn.dataset.category;
+        render();
+      });
+    });
+
+    // Update countdowns every minute
+    setInterval(() => render(), 60_000);
 
     // Initial render
     render();
