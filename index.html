@@ -698,6 +698,79 @@
         to { opacity: 0; transform: translateY(12px); }
       }
 
+      /* Delete confirmation dialog */
+      .confirm-dialog {
+        border: 1px solid var(--ctp-surface2);
+        border-radius: var(--radius-lg);
+        background: var(--ctp-surface0);
+        color: var(--ctp-text);
+        padding: var(--space-2xl);
+        max-inline-size: 360px;
+        inline-size: calc(100% - var(--space-2xl) * 2);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+        font-family: inherit;
+        animation: dialog-in 0.2s ease-out;
+
+        &::backdrop {
+          background: rgba(0, 0, 0, 0.6);
+        }
+      }
+
+      .confirm-dialog-title {
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin-block-end: var(--space-sm);
+      }
+
+      .confirm-dialog-text {
+        font-size: 0.9rem;
+        color: var(--ctp-subtext0);
+        margin-block-end: var(--space-xl);
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .confirm-dialog-actions {
+        display: flex;
+        gap: var(--space-sm);
+        justify-content: flex-end;
+      }
+
+      .confirm-dialog-actions button {
+        padding: var(--space-sm) var(--space-lg);
+        border: none;
+        border-radius: var(--radius-md);
+        font-family: inherit;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        min-block-size: var(--touch-min);
+        transition: background 0.2s;
+      }
+
+      .confirm-cancel-btn {
+        background: var(--ctp-surface2);
+        color: var(--ctp-text);
+
+        &:hover {
+          background: var(--ctp-overlay0);
+        }
+      }
+
+      .confirm-delete-btn {
+        background: var(--ctp-red);
+        color: var(--ctp-crust);
+
+        &:hover {
+          background: color-mix(in oklch, var(--ctp-red), var(--ctp-maroon) 50%);
+        }
+      }
+
+      @keyframes dialog-in {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+
       /* Empty state */
       .empty-state {
         text-align: center;
@@ -819,6 +892,15 @@
 
   <div class="toast-container" id="toast-container"></div>
 
+  <dialog class="confirm-dialog" id="delete-dialog">
+    <p class="confirm-dialog-title">Delete task</p>
+    <p class="confirm-dialog-text" id="delete-dialog-text"></p>
+    <div class="confirm-dialog-actions">
+      <button class="confirm-cancel-btn" id="delete-dialog-cancel">Cancel</button>
+      <button class="confirm-delete-btn" id="delete-dialog-confirm">Delete</button>
+    </div>
+  </dialog>
+
   <script>
     const STORAGE_KEY = 'catppuccin-todos';
     const MAX_UNDO = 50;
@@ -852,6 +934,11 @@
     const sortSelect = document.getElementById('sort-select');
     const categoryFilterBtns = document.querySelectorAll('#category-filters button');
     const toastContainer = document.getElementById('toast-container');
+    const deleteDialog = document.getElementById('delete-dialog');
+    const deleteDialogText = document.getElementById('delete-dialog-text');
+    const deleteDialogCancel = document.getElementById('delete-dialog-cancel');
+    const deleteDialogConfirm = document.getElementById('delete-dialog-confirm');
+    let pendingDeleteId = null;
 
     function loadTodos() {
       try {
@@ -953,11 +1040,27 @@
 
     function deleteTodo(id) {
       const todo = todos.find(t => t.id === id);
+      if (!todo) return;
+      pendingDeleteId = id;
+      deleteDialogText.textContent = `"${todo.text.length > 60 ? todo.text.slice(0, 60) + '...' : todo.text}"`;
+      deleteDialog.showModal();
+    }
+
+    function confirmDelete() {
+      const id = pendingDeleteId;
+      pendingDeleteId = null;
+      deleteDialog.close();
+      const todo = todos.find(t => t.id === id);
       pushUndo('Task deleted');
       todos = todos.filter(t => t.id !== id);
       save();
       render();
       showToast(`Deleted "${todo ? todo.text.slice(0, 30) : 'task'}${todo && todo.text.length > 30 ? '...' : ''}"`);
+    }
+
+    function cancelDelete() {
+      pendingDeleteId = null;
+      deleteDialog.close();
     }
 
     function clearCompleted() {
@@ -1251,6 +1354,10 @@
     });
 
     clearBtn.addEventListener('click', clearCompleted);
+
+    deleteDialogConfirm.addEventListener('click', confirmDelete);
+    deleteDialogCancel.addEventListener('click', cancelDelete);
+    deleteDialog.addEventListener('cancel', () => { pendingDeleteId = null; });
 
     filterBtns.forEach(btn => {
       btn.addEventListener('click', () => {
