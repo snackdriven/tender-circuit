@@ -110,6 +110,12 @@
     }
   }
 
+  .header-end {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
   .task-count {
     font-family: var(--font-mono);
     font-size: 0.8rem;
@@ -190,6 +196,12 @@
       color: var(--ctp-text);
     }
 
+    &.active {
+      border-color: var(--ctp-mauve);
+      background: color-mix(in oklch, var(--ctp-mauve) 10%, transparent);
+      color: var(--ctp-mauve);
+    }
+
     &:active {
       transform: scale(0.97);
     }
@@ -256,6 +268,16 @@
       filter: invert(0.7);
       cursor: pointer;
     }
+  }
+
+  .create-form select,
+  .edit-form select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath stroke='%237f849c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-inline-end: 2.25rem;
+    cursor: pointer;
   }
 
   .form-row {
@@ -598,7 +620,7 @@
   }
 
   .week-day-name {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -649,6 +671,15 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-sm);
+
+    & > * {
+      animation: card-in 0.16s ease-out both;
+    }
+  }
+
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
   /* Item cards */
@@ -680,6 +711,10 @@
     border-inline-start: 3px solid var(--ctp-peach);
   }
 
+  .task-card {
+    border-inline-start: 3px solid var(--ctp-overlay0);
+  }
+
   .item-content {
     flex: 1;
     display: flex;
@@ -690,7 +725,8 @@
   }
 
   .item-title {
-    font-size: 0.95rem;
+    font-size: 1rem;
+    font-weight: 600;
     color: var(--ctp-text);
     overflow-wrap: break-word;
   }
@@ -712,6 +748,10 @@
   .event-location {
     font-size: 0.75rem;
     color: var(--ctp-subtext0);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-inline-size: 16rem;
   }
 
   .event-notes {
@@ -768,8 +808,8 @@
   }
 
   .stale-badge {
-    background: color-mix(in oklch, var(--ctp-yellow) 15%, transparent);
-    color: var(--ctp-yellow);
+    background: color-mix(in oklch, var(--ctp-overlay2) 20%, transparent);
+    color: var(--ctp-overlay2);
   }
 
   /* Custom checkbox */
@@ -1030,6 +1070,15 @@
     padding: var(--space-4xl) var(--space-lg);
     color: var(--ctp-overlay0);
 
+    &::before {
+      content: '∅';
+      display: block;
+      font-size: 2rem;
+      opacity: 0.4;
+      margin-block-end: var(--space-md);
+      line-height: 1;
+    }
+
     & p {
       font-size: 0.95rem;
       text-wrap: balance;
@@ -1046,20 +1095,25 @@
   .calendar-mode-toggle {
     display: flex;
     gap: var(--space-xs);
+    background: var(--ctp-mantle);
+    padding: var(--space-xs);
+    border-radius: var(--radius-lg);
+    align-self: flex-start;
   }
 
   .calendar-mode-btn {
-    padding: var(--space-xs) var(--space-md);
+    padding-block: 0.6rem;
+    padding-inline: var(--space-md);
     border: none;
     border-radius: var(--radius-md);
     background: transparent;
     color: var(--ctp-overlay1);
     font-family: inherit;
-    font-size: 0.8rem;
+    font-size: clamp(0.78rem, 0.7rem + 0.5vw, 0.85rem);
     font-weight: 500;
     cursor: pointer;
     transition: background 0.2s, color 0.2s;
-    min-block-size: 32px;
+    min-block-size: var(--touch-min);
 
     &.active {
       background: var(--ctp-surface0);
@@ -1167,6 +1221,13 @@
     color: var(--ctp-overlay1);
     font-size: 0.85rem;
     min-block-size: 1.2em;
+  }
+
+  .login-title {
+    font-size: clamp(1.75rem, 1.5rem + 1vw, 2.25rem);
+    font-weight: 700;
+    color: var(--ctp-mauve);
+    letter-spacing: -0.025em;
   }
 
   /* Sync dot */

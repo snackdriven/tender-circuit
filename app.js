@@ -1035,13 +1035,13 @@ function renderCreateToggle() {
   const container = document.getElementById('create-toggle');
   container.innerHTML = '';
 
-  const eventBtn = el('button', { className: 'create-btn', text: 'New Event' });
+  const eventBtn = el('button', { className: `create-btn${createFormType === 'event' ? ' active' : ''}`, text: 'New Event' });
   eventBtn.addEventListener('click', () => {
     createFormType = createFormType === 'event' ? null : 'event';
     render();
   });
 
-  const taskBtn = el('button', { className: 'create-btn', text: 'New Task' });
+  const taskBtn = el('button', { className: `create-btn${createFormType === 'task' ? ' active' : ''}`, text: 'New Task' });
   taskBtn.addEventListener('click', () => {
     createFormType = createFormType === 'task' ? null : 'task';
     render();
@@ -1899,6 +1899,7 @@ function renderLoginScreen() {
   app.innerHTML = '';
 
   const screen = el('div', { className: 'login-screen' });
+  screen.appendChild(el('h1', { className: 'login-title', text: 'Planner' }));
   const formArea = el('div', { className: 'login-form-area' });
 
   formArea.appendChild(el('p', { className: 'login-subtitle', text: 'Sign in to sync across devices' }));
