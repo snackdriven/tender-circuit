@@ -92,7 +92,7 @@
     padding: var(--space-2xl) var(--space-md) env(safe-area-inset-bottom, var(--space-2xl));
     display: flex;
     flex-direction: column;
-    gap: var(--space-lg);
+    gap: var(--space-xl);
   }
 
   /* Header */
@@ -212,8 +212,8 @@
   .edit-form {
     display: flex;
     flex-direction: column;
-    gap: var(--space-sm);
-    padding: var(--space-lg);
+    gap: var(--space-md);
+    padding: var(--space-xl);
     background: var(--ctp-surface0);
     border-radius: var(--radius-lg);
   }
@@ -329,7 +329,7 @@
     display: flex;
     gap: var(--space-sm);
     justify-content: flex-end;
-    padding-block-start: var(--space-sm);
+    padding-block-start: var(--space-md);
   }
 
   .btn-primary,
@@ -521,9 +521,9 @@
   .card-subtask-list {
     display: flex;
     flex-direction: column;
-    gap: 1px;
-    padding-block-start: var(--space-sm);
-    margin-block-start: var(--space-xs);
+    gap: 2px;
+    padding-block-start: var(--space-md);
+    margin-block-start: var(--space-sm);
     border-block-start: 1px solid var(--ctp-surface1);
   }
 
@@ -531,7 +531,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-sm);
-    padding: 3px var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
     border-radius: var(--radius-sm);
 
     & input[type="checkbox"] {
@@ -670,7 +670,7 @@
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: var(--space-sm);
+    gap: var(--space-md);
 
     & > * {
       animation: card-in 0.16s ease-out both;
@@ -687,7 +687,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-md);
-    padding: 0.85rem var(--space-lg);
+    padding: var(--space-lg) var(--space-lg);
     background: var(--ctp-surface0);
     border-radius: var(--radius-lg);
     transition: background 0.2s, opacity 0.3s;
@@ -719,7 +719,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: var(--space-xs);
     overflow: hidden;
     min-inline-size: 0;
   }
@@ -917,7 +917,7 @@
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--ctp-subtext0);
-    padding-block-end: var(--space-sm);
+    padding-block-end: var(--space-md);
   }
 
   .overdue-heading {
@@ -925,7 +925,7 @@
   }
 
   .overdue-section {
-    margin-block-end: var(--space-lg);
+    margin-block-end: var(--space-2xl);
   }
 
   /* Toast */
@@ -1129,13 +1129,13 @@
   .agenda-view {
     display: flex;
     flex-direction: column;
-    gap: var(--space-xl);
+    gap: var(--space-3xl);
   }
 
   .agenda-date-group {
     display: flex;
     flex-direction: column;
-    gap: var(--space-sm);
+    gap: var(--space-md);
   }
 
   .agenda-date-heading {
