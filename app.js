@@ -1193,11 +1193,19 @@ function buildTaskForm() {
   // Conditional field visibility
   function updateConditionalFields() {
     const ts = timeStateSelect.value;
-    dueDateRow.style.display = ts === 'open' ? 'none' : '';
     activationDateRow.style.display = ts === 'due-by' ? '' : 'none';
     recurrenceRow.style.display = ts === 'recurring' ? '' : 'none';
   }
   timeStateSelect.addEventListener('change', updateConditionalFields);
+  dueDateInput.addEventListener('change', () => {
+    if (dueDateInput.value && timeStateSelect.value === 'open') {
+      timeStateSelect.value = 'due-by';
+      updateConditionalFields();
+    } else if (!dueDateInput.value && timeStateSelect.value === 'due-by') {
+      timeStateSelect.value = 'open';
+      updateConditionalFields();
+    }
+  });
   updateConditionalFields();
 
   const actions = el('div', { className: 'form-actions' });
@@ -1559,11 +1567,19 @@ function renderTaskEditForm(task) {
   // Conditional fields
   function updateConditionalFields() {
     const ts = timeStateSelect.value;
-    dueDateRow.style.display = ts === 'open' ? 'none' : '';
     activationDateRow.style.display = ts === 'due-by' ? '' : 'none';
     recurrenceRow.style.display = ts === 'recurring' ? '' : 'none';
   }
   timeStateSelect.addEventListener('change', updateConditionalFields);
+  dueDateInput.addEventListener('change', () => {
+    if (dueDateInput.value && timeStateSelect.value === 'open') {
+      timeStateSelect.value = 'due-by';
+      updateConditionalFields();
+    } else if (!dueDateInput.value && timeStateSelect.value === 'due-by') {
+      timeStateSelect.value = 'open';
+      updateConditionalFields();
+    }
+  });
   updateConditionalFields();
 
   // Actions
