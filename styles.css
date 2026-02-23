@@ -751,7 +751,7 @@
   /* Item cards */
   .item-card {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--space-md);
     padding: var(--space-md) var(--space-lg);
     background: var(--ctp-surface0);
@@ -1016,7 +1016,7 @@
     color: var(--ctp-subtext0);
     padding-block: var(--space-sm) var(--space-md);
     position: sticky;
-    top: 0;
+    top: env(safe-area-inset-top, 0px);
     z-index: 1;
     background: color-mix(in oklch, var(--ctp-base) 92%, transparent);
     backdrop-filter: blur(12px);
@@ -1109,8 +1109,7 @@
     background: var(--ctp-surface0);
     color: var(--ctp-text);
     padding: var(--space-2xl);
-    max-inline-size: min(90vw, 24rem);
-    inline-size: calc(100% - var(--space-2xl) * 2);
+    max-inline-size: min(90dvw, 24rem);
     box-shadow: 0 16px 48px color-mix(in oklch, var(--ctp-crust) 50%, transparent);
     font-family: inherit;
     animation: dialog-in 0.2s ease-out;
@@ -1137,8 +1136,6 @@
     font-size: var(--text-md);
     color: var(--ctp-subtext0);
     margin-block-end: var(--space-xl);
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .confirm-dialog-actions {
@@ -1506,5 +1503,10 @@
     .item-card.completed {
       opacity: 0.7;
     }
+  }
+
+  /* On very narrow screens, hide Today button to give week-day cells more room */
+  @media (max-width: 340px) {
+    .week-today-btn { display: none; }
   }
 }
