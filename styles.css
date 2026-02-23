@@ -178,6 +178,7 @@
     }
 
     &:hover:not(.active) {
+      background: color-mix(in oklch, var(--ctp-surface0) 50%, transparent);
       color: var(--ctp-subtext0);
     }
   }
@@ -209,7 +210,7 @@
 
     &.active {
       border-color: var(--ctp-mauve);
-      background: color-mix(in oklch, var(--ctp-mauve) 10%, transparent);
+      background: color-mix(in oklch, var(--ctp-mauve) 20%, transparent);
       color: var(--ctp-mauve);
     }
 
@@ -867,7 +868,7 @@
   }
 
   .blocked-badge {
-    background: color-mix(in oklch, var(--ctp-maroon) 18%, transparent);
+    background: color-mix(in oklch, var(--ctp-maroon) 15%, transparent);
     color: var(--ctp-maroon);
   }
 
@@ -990,7 +991,7 @@
     position: sticky;
     top: 0;
     z-index: 1;
-    background: color-mix(in oklch, var(--ctp-base) 88%, transparent);
+    background: color-mix(in oklch, var(--ctp-base) 92%, transparent);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
@@ -1310,7 +1311,7 @@
   /* Agenda events-only note */
   .agenda-events-note {
     font-size: var(--text-xs);
-    color: var(--ctp-overlay0);
+    color: var(--ctp-overlay1);
     padding-inline-start: var(--space-xs);
     margin-block-end: var(--space-sm);
   }
@@ -1318,7 +1319,7 @@
   /* Done view cap note */
   .done-cap-note {
     font-size: var(--text-xs);
-    color: var(--ctp-overlay0);
+    color: var(--ctp-overlay1);
     text-align: center;
     padding-block: var(--space-lg);
   }
@@ -1436,7 +1437,7 @@
     background: none;
     border: none;
     cursor: pointer;
-    color: var(--ctp-overlay0);
+    color: var(--ctp-overlay1);
     font-family: inherit;
     font-size: var(--text-xs);
     padding: var(--space-xs) var(--space-sm);
