@@ -1346,6 +1346,13 @@ function renderWeekStrip() {
   const nextBtn = el('button', { className: 'week-nav', text: '\u203a', ariaLabel: 'Next week' });
   nextBtn.addEventListener('click', () => { weekStart = addDays(weekStart, 7); render(); });
 
+  const todayBtn = el('button', { className: 'week-today-btn', text: 'Today' });
+  todayBtn.addEventListener('click', () => {
+    selectedDate = todayStr();
+    weekStart = getWeekStart(todayStr());
+    render();
+  });
+
   const days = el('div', { className: 'week-days' });
   for (let i = 0; i < 7; i++) {
     const d = addDays(weekStart, i);
@@ -1366,7 +1373,7 @@ function renderWeekStrip() {
     days.appendChild(dayCell);
   }
 
-  strip.append(prevBtn, days, nextBtn);
+  strip.append(prevBtn, days, nextBtn, todayBtn);
   return strip;
 }
 

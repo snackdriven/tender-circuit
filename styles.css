@@ -631,6 +631,27 @@
     font-weight: 600;
   }
 
+  .week-today-btn {
+    flex: 0 0 auto;
+    padding-inline: var(--space-sm);
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--ctp-overlay1);
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    min-block-size: var(--touch-min);
+    transition: color 0.2s, background 0.2s;
+    white-space: nowrap;
+
+    &:hover {
+      color: var(--ctp-peach);
+      background: var(--ctp-surface0);
+    }
+  }
+
   .week-day-dot {
     inline-size: 4px;
     block-size: 4px;
