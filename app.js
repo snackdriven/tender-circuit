@@ -1761,7 +1761,7 @@ async function sendMagicLink(email) {
       'Content-Type': 'application/json',
       'apikey': SUPABASE_ANON_KEY,
     },
-    body: JSON.stringify({ email, create_user: true }),
+    body: JSON.stringify({ email, create_user: true, redirect_to: window.location.origin + window.location.pathname }),
   });
   return res.ok;
 }
