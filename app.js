@@ -953,7 +953,7 @@ function render() {
     if (viewItems.length === 0) {
       content.appendChild(renderEmptyState());
     } else {
-      const readOnly = currentView === 'done' || currentView === 'all';
+      const readOnly = currentView === 'done';
       const list = el('ul', { className: 'item-list' });
       viewItems.forEach(item => list.appendChild(renderItemCard(item, { readOnly })));
       content.appendChild(list);
