@@ -482,8 +482,8 @@ let syncTimer = null;
 let lastSyncedAt = 0;
 let calendarMode = 'day'; // 'day' | 'agenda'
 let activeViewWindow = ACTIVE_WINDOW_DAYS; // days ahead; null = no limit
-let allSortOrder = 'newest'; // 'newest' | 'alpha' | 'due'
-let allTypeFilter = 'all';  // 'all' | 'task' | 'event' | 'grouped'
+let allSortOrder = 'newest'; // 'newest' | 'due'
+let allTypeFilter = 'all';  // 'all' | 'task' | 'event'
 let browseSortOrder = '15min'; // '15min' | 'alpha' | 'newest'
 
 // === Composable Filter Predicates ===
@@ -516,7 +516,7 @@ function getViewItems(viewName) {
     browse:    allPreds(isTask, isActiveish, anyPred(isOpen, hasLabel('browse'), hasLabel('15min'))),
     recurring: allPreds(isTask, isRecurring, recurringDue(today), notDone),
     done:      isDone,
-    all:       (item) => allTypeFilter === 'all' || allTypeFilter === 'grouped' || item.type === allTypeFilter,
+    all:       (item) => allTypeFilter === 'all' || item.type === allTypeFilter,
   };
 
   const filter = VIEWS[viewName];
@@ -581,9 +581,7 @@ function sortForView(arr, viewName, today) {
       sorted.sort((a, b) => b.updatedAt - a.updatedAt);
       break;
     case 'all':
-      if (allSortOrder === 'alpha') {
-        sorted.sort((a, b) => a.title.localeCompare(b.title));
-      } else if (allSortOrder === 'due') {
+      if (allSortOrder === 'due') {
         const getDate = i => i.dueDate || (i.dateTime ? i.dateTime.slice(0, 10) : null);
         sorted.sort((a, b) => {
           const da = getDate(a) || '9999-99-99';
@@ -1003,30 +1001,6 @@ function render() {
   } else {
     if (currentView === 'calendar' && calendarMode === 'agenda') {
       content.appendChild(renderAgendaView());
-    } else if (currentView === 'all' && allTypeFilter === 'grouped') {
-      const allItems = getViewItems('all');
-      if (allItems.length === 0) {
-        content.appendChild(renderEmptyState());
-      } else {
-        const tasks  = allItems.filter(i => i.type === 'task');
-        const events = allItems.filter(i => i.type === 'event');
-        if (tasks.length > 0) {
-          const section = el('section');
-          section.appendChild(el('h2', { className: 'section-heading', text: 'Tasks' }));
-          const list = el('ul', { className: 'item-list' });
-          tasks.forEach(item => list.appendChild(renderItemCard(item)));
-          section.appendChild(list);
-          content.appendChild(section);
-        }
-        if (events.length > 0) {
-          const section = el('section');
-          section.appendChild(el('h2', { className: 'section-heading', text: 'Events' }));
-          const list = el('ul', { className: 'item-list' });
-          events.forEach(item => list.appendChild(renderItemCard(item)));
-          section.appendChild(list);
-          content.appendChild(section);
-        }
-      }
     } else {
       const viewItems = getViewItems(currentView);
       if (viewItems.length === 0) {
@@ -1349,10 +1323,9 @@ function buildTaskForm() {
 function renderAllTypeFilter() {
   const toggle = el('div', { className: 'calendar-mode-toggle' });
   const options = [
-    { label: 'All',     value: 'all'     },
-    { label: 'Tasks',   value: 'task'    },
-    { label: 'Events',  value: 'event'   },
-    { label: 'Grouped', value: 'grouped' },
+    { label: 'All',    value: 'all'   },
+    { label: 'Tasks',  value: 'task'  },
+    { label: 'Events', value: 'event' },
   ];
   options.forEach(({ label, value }) => {
     const btn = el('button', {
@@ -1389,7 +1362,6 @@ function renderAllSortToggle() {
   const toggle = el('div', { className: 'calendar-mode-toggle' });
   const options = [
     { label: 'Newest', value: 'newest' },
-    { label: 'A→Z',    value: 'alpha'  },
     { label: 'Due',    value: 'due'    },
   ];
   options.forEach(({ label, value }) => {
