@@ -514,7 +514,7 @@ function getViewItems(viewName) {
     browse:    allPreds(isTask, isActiveish, anyPred(isOpen, hasLabel('browse'), hasLabel('15min'))),
     recurring: allPreds(isTask, isRecurring, recurringDue(today), notDone),
     done:      isDone,
-    all:       (item) => allTypeFilter === 'all' || item.type === allTypeFilter,
+    all:       (item) => allTypeFilter === 'all' || allTypeFilter === 'grouped' || item.type === allTypeFilter,
   };
 
   const filter = VIEWS[viewName];
@@ -989,6 +989,30 @@ function render() {
   } else {
     if (currentView === 'calendar' && calendarMode === 'agenda') {
       content.appendChild(renderAgendaView());
+    } else if (currentView === 'all' && allTypeFilter === 'grouped') {
+      const allItems = getViewItems('all');
+      if (allItems.length === 0) {
+        content.appendChild(renderEmptyState());
+      } else {
+        const tasks  = allItems.filter(i => i.type === 'task');
+        const events = allItems.filter(i => i.type === 'event');
+        if (tasks.length > 0) {
+          const section = el('section');
+          section.appendChild(el('h2', { className: 'section-heading', text: 'Tasks' }));
+          const list = el('ul', { className: 'item-list' });
+          tasks.forEach(item => list.appendChild(renderItemCard(item)));
+          section.appendChild(list);
+          content.appendChild(section);
+        }
+        if (events.length > 0) {
+          const section = el('section');
+          section.appendChild(el('h2', { className: 'section-heading', text: 'Events' }));
+          const list = el('ul', { className: 'item-list' });
+          events.forEach(item => list.appendChild(renderItemCard(item)));
+          section.appendChild(list);
+          content.appendChild(section);
+        }
+      }
     } else {
       const viewItems = getViewItems(currentView);
       if (viewItems.length === 0) {
@@ -1294,9 +1318,10 @@ function buildTaskForm() {
 function renderAllTypeFilter() {
   const toggle = el('div', { className: 'calendar-mode-toggle' });
   const options = [
-    { label: 'All',    value: 'all'   },
-    { label: 'Tasks',  value: 'task'  },
-    { label: 'Events', value: 'event' },
+    { label: 'All',     value: 'all'     },
+    { label: 'Tasks',   value: 'task'    },
+    { label: 'Events',  value: 'event'   },
+    { label: 'Grouped', value: 'grouped' },
   ];
   options.forEach(({ label, value }) => {
     const btn = el('button', {
