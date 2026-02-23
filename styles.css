@@ -43,6 +43,7 @@
     --font-mono: 'DM Mono', ui-monospace, 'Cascadia Mono', 'Fira Mono', monospace;
 
     /* Spacing scale */
+    --space-2xs: 0.125rem;
     --space-xs: 0.25rem;
     --space-sm: 0.5rem;
     --space-md: 0.75rem;
@@ -55,7 +56,7 @@
     /* Radii */
     --radius-sm: 6px;
     --radius-md: 10px;
-    --radius-lg: 12px;
+    --radius-lg: 16px;
     --radius-full: 999px;
 
     /* Touch target minimum */
@@ -148,7 +149,7 @@
     padding-block: 0.6rem;
     padding-inline: var(--space-md);
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     background: transparent;
     color: var(--ctp-overlay1);
     font-family: inherit;
@@ -188,7 +189,7 @@
     font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.1s;
     min-block-size: var(--touch-min);
 
     &:hover {
@@ -276,7 +277,7 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath stroke='%237f849c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
-    padding-inline-end: 2.25rem;
+    padding-inline-end: var(--space-3xl);
     cursor: pointer;
   }
 
@@ -373,7 +374,7 @@
     color: var(--ctp-blue);
     padding: var(--space-xs) var(--space-md);
     font-size: 0.8rem;
-    min-block-size: 36px;
+    min-block-size: var(--touch-min);
     flex-shrink: 0;
 
     &:hover {
@@ -433,7 +434,7 @@
   .subtask-list {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: var(--space-2xs);
   }
 
   .subtask-entry {
@@ -506,10 +507,10 @@
     border-radius: var(--radius-full);
     display: inline-flex;
     align-items: center;
-    gap: 3px;
+    gap: var(--space-xs);
     transition: background 0.15s, color 0.15s;
 
-    &::after { content: '▸'; font-size: 0.6rem; }
+    &::after { content: '▸'; font-size: 0.65rem; }
     &.expanded::after { content: '▾'; }
 
     &:hover {
@@ -521,7 +522,7 @@
   .card-subtask-list {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: var(--space-2xs);
     padding-block-start: var(--space-md);
     margin-block-start: var(--space-sm);
     border-block-start: 1px solid var(--ctp-surface1);
@@ -562,7 +563,7 @@
     inline-size: var(--touch-min);
     block-size: var(--touch-min);
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-full);
     background: var(--ctp-surface0);
     color: var(--ctp-subtext0);
     font-size: 1.5rem;
@@ -581,7 +582,7 @@
   .week-days {
     display: flex;
     flex: 1;
-    gap: 2px;
+    gap: var(--space-2xs);
   }
 
   .week-day {
@@ -589,7 +590,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
+    gap: var(--space-2xs);
     padding: var(--space-xs) 0;
     border: none;
     border-radius: var(--radius-md);
@@ -711,7 +712,7 @@
     padding: var(--space-lg) var(--space-lg);
     background: var(--ctp-surface0);
     border-radius: var(--radius-lg);
-    transition: background 0.2s, opacity 0.3s;
+    transition: background 0.2s, opacity 0.2s;
 
     &.completed {
       opacity: 0.55;
@@ -729,16 +730,16 @@
   }
 
   .event-card {
-    border-inline-start: 3px solid var(--ctp-peach);
+    box-shadow: inset 3px 0 0 0 var(--ctp-peach);
   }
 
   .task-card {
-    border-inline-start: 3px solid var(--ctp-overlay0);
+    box-shadow: inset 3px 0 0 0 var(--ctp-overlay0);
   }
 
   .task-card.overdue {
     background: color-mix(in oklch, var(--ctp-red) 6%, var(--ctp-surface0));
-    border-inline-start-color: var(--ctp-red);
+    box-shadow: inset 3px 0 0 0 var(--ctp-red);
   }
 
   .task-card.waiting {
@@ -992,7 +993,7 @@
     border-radius: var(--radius-lg);
     color: var(--ctp-text);
     font-size: 0.85rem;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 24px color-mix(in oklch, var(--ctp-crust) 40%, transparent);
     pointer-events: auto;
     animation: toast-in 0.25s ease-out;
     max-inline-size: 400px;
@@ -1018,7 +1019,7 @@
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.2s;
-    min-block-size: 36px;
+    min-block-size: var(--touch-min);
 
     &:hover {
       background: color-mix(in oklch, var(--ctp-mauve), var(--ctp-lavender) 50%);
@@ -1044,17 +1045,17 @@
     padding: var(--space-2xl);
     max-inline-size: min(90vw, 24rem);
     inline-size: calc(100% - var(--space-2xl) * 2);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 16px 48px color-mix(in oklch, var(--ctp-crust) 50%, transparent);
     font-family: inherit;
     animation: dialog-in 0.2s ease-out;
 
     &::backdrop {
-      background: rgba(0, 0, 0, 0.6);
+      background: color-mix(in oklch, var(--ctp-crust) 60%, transparent);
     }
   }
 
   .confirm-dialog-title {
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 600;
     margin-block-end: var(--space-sm);
   }
@@ -1149,7 +1150,7 @@
     padding-block: 0.6rem;
     padding-inline: var(--space-md);
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     background: transparent;
     color: var(--ctp-overlay1);
     font-family: inherit;
@@ -1304,6 +1305,7 @@
     font-size: 0.75rem;
     padding: var(--space-xs) var(--space-sm);
     border-radius: var(--radius-sm);
+    transition: color 0.2s, background 0.2s;
 
     &:hover {
       color: var(--ctp-subtext0);
