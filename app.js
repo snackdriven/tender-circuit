@@ -1290,7 +1290,7 @@ function renderAgendaView() {
     const section = el('div', { className: 'agenda-date-group' });
     section.appendChild(el('p', { className: `agenda-date-heading${isToday ? ' today' : ''}`, text: label }));
     const list = el('ul', { className: 'item-list' });
-    events.forEach(e => list.appendChild(renderItemCard(e)));
+    events.forEach(e => list.appendChild(renderItemCard(e, { agendaMode: true })));
     section.appendChild(list);
     container.appendChild(section);
   }
@@ -1386,7 +1386,15 @@ function renderEventCard(event, opts = {}) {
 
   const meta = el('div', { className: 'item-meta' });
   if (event.dateTime) {
-    meta.appendChild(el('span', { className: 'event-time', text: formatDateTime(event.dateTime, event.allDay) }));
+    if (opts.agendaMode) {
+      // Date is already in the group header — show time only for timed events
+      if (!event.allDay) {
+        const t = new Date(event.dateTime).toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' });
+        meta.appendChild(el('span', { className: 'event-time', text: t }));
+      }
+    } else {
+      meta.appendChild(el('span', { className: 'event-time', text: formatDateTime(event.dateTime, event.allDay) }));
+    }
   }
   const eventCountdown = formatEventCountdown(event.dateTime, event.allDay);
   if (eventCountdown) {
