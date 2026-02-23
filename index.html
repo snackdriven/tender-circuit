@@ -301,6 +301,12 @@
       }
 
       /* Category filter bar */
+      .category-bar {
+        display: flex;
+        gap: var(--space-sm);
+        align-items: center;
+      }
+
       .category-filters {
         display: flex;
         gap: var(--space-xs);
@@ -308,6 +314,8 @@
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
         padding-block: 2px;
+        flex: 1;
+        min-inline-size: 0;
 
         &::-webkit-scrollbar {
           display: none;
@@ -337,6 +345,276 @@
             color: var(--ctp-subtext0);
             border-color: var(--ctp-overlay0);
           }
+        }
+      }
+
+      .manage-categories-btn {
+        background: none;
+        border: 1.5px solid var(--ctp-surface2);
+        border-radius: var(--radius-full);
+        color: var(--ctp-overlay1);
+        cursor: pointer;
+        padding: var(--space-xs);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-inline-size: 32px;
+        min-block-size: 32px;
+        flex-shrink: 0;
+        transition: color 0.2s, border-color 0.2s, background 0.2s;
+
+        &:hover {
+          color: var(--ctp-subtext0);
+          border-color: var(--ctp-overlay0);
+          background: var(--ctp-surface0);
+        }
+
+        & svg {
+          inline-size: 14px;
+          block-size: 14px;
+        }
+      }
+
+      /* Category management dialog */
+      .category-dialog {
+        border: 1px solid var(--ctp-surface2);
+        border-radius: var(--radius-lg);
+        background: var(--ctp-surface0);
+        color: var(--ctp-text);
+        padding: var(--space-2xl);
+        max-inline-size: 420px;
+        inline-size: calc(100% - var(--space-2xl) * 2);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+        font-family: inherit;
+        animation: dialog-in 0.2s ease-out;
+
+        &::backdrop {
+          background: rgba(0, 0, 0, 0.6);
+        }
+      }
+
+      .category-dialog-title {
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin-block-end: var(--space-lg);
+      }
+
+      .category-dialog-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
+        margin-block-end: var(--space-lg);
+      }
+
+      .category-dialog-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        padding: var(--space-sm) var(--space-md);
+        border-radius: var(--radius-md);
+        background: var(--ctp-mantle);
+
+        &.editing {
+          flex-wrap: wrap;
+        }
+      }
+
+      .category-dialog-dot {
+        inline-size: 10px;
+        block-size: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .category-dialog-label {
+        flex: 1;
+        font-size: 0.9rem;
+      }
+
+      .category-dialog-item-actions {
+        display: flex;
+        gap: 2px;
+      }
+
+      .category-edit-btn,
+      .category-delete-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: var(--space-xs);
+        border-radius: var(--radius-sm);
+        color: var(--ctp-overlay0);
+        transition: color 0.2s, background 0.2s;
+        display: flex;
+        align-items: center;
+        min-inline-size: 32px;
+        min-block-size: 32px;
+        justify-content: center;
+
+        & svg {
+          inline-size: 14px;
+          block-size: 14px;
+        }
+      }
+
+      .category-edit-btn:hover {
+        color: var(--ctp-blue);
+        background: var(--ctp-surface0);
+      }
+
+      .category-delete-btn:hover {
+        color: var(--ctp-red);
+        background: var(--ctp-surface0);
+      }
+
+      .category-edit-form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-sm);
+        inline-size: 100%;
+        padding-block-start: var(--space-sm);
+      }
+
+      .category-edit-form input[type="text"] {
+        padding: var(--space-sm) var(--space-md);
+        border: 2px solid var(--ctp-surface2);
+        border-radius: var(--radius-md);
+        background: var(--ctp-surface0);
+        color: var(--ctp-text);
+        font-family: inherit;
+        font-size: 0.85rem;
+        outline: none;
+
+        &:focus {
+          border-color: var(--ctp-mauve);
+        }
+      }
+
+      .category-edit-form-actions {
+        display: flex;
+        gap: var(--space-sm);
+        justify-content: flex-end;
+      }
+
+      .category-edit-form-actions button {
+        padding: var(--space-xs) var(--space-md);
+        border: none;
+        border-radius: var(--radius-md);
+        font-family: inherit;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        min-block-size: 32px;
+        transition: background 0.2s;
+      }
+
+      .color-picker {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-xs);
+      }
+
+      .color-swatch {
+        inline-size: 22px;
+        block-size: 22px;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: border-color 0.15s, transform 0.1s;
+        padding: 0;
+
+        &:hover {
+          transform: scale(1.15);
+        }
+
+        &.selected {
+          border-color: var(--ctp-text);
+          transform: scale(1.15);
+        }
+      }
+
+      .add-category-form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-sm);
+        padding-block-start: var(--space-lg);
+        border-block-start: 1px solid var(--ctp-surface2);
+      }
+
+      .add-category-form-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--ctp-subtext0);
+      }
+
+      .add-category-form input[type="text"] {
+        padding: var(--space-sm) var(--space-md);
+        border: 2px solid var(--ctp-surface2);
+        border-radius: var(--radius-md);
+        background: var(--ctp-mantle);
+        color: var(--ctp-text);
+        font-family: inherit;
+        font-size: 0.85rem;
+        outline: none;
+
+        &:focus {
+          border-color: var(--ctp-mauve);
+        }
+
+        &::placeholder {
+          color: var(--ctp-overlay0);
+        }
+      }
+
+      .add-category-actions {
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .add-category-btn {
+        padding: var(--space-xs) var(--space-lg);
+        border: none;
+        border-radius: var(--radius-md);
+        background: var(--ctp-green);
+        color: var(--ctp-crust);
+        font-family: inherit;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        min-block-size: 32px;
+        transition: background 0.2s, transform 0.1s;
+
+        &:hover {
+          background: color-mix(in oklch, var(--ctp-green), var(--ctp-teal) 40%);
+        }
+
+        &:active {
+          transform: scale(0.96);
+        }
+      }
+
+      .category-dialog-footer {
+        display: flex;
+        justify-content: flex-end;
+        padding-block-start: var(--space-lg);
+      }
+
+      .category-dialog-done-btn {
+        padding: var(--space-sm) var(--space-xl);
+        border: none;
+        border-radius: var(--radius-md);
+        background: var(--ctp-surface2);
+        color: var(--ctp-text);
+        font-family: inherit;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        min-block-size: var(--touch-min);
+        transition: background 0.2s;
+
+        &:hover {
+          background: var(--ctp-overlay0);
         }
       }
 
@@ -849,14 +1127,7 @@
     </div>
 
     <div class="options-row">
-      <select id="category-select" aria-label="Category">
-        <option value="general">General</option>
-        <option value="work">Work</option>
-        <option value="personal">Personal</option>
-        <option value="health">Health</option>
-        <option value="finance">Finance</option>
-        <option value="learning">Learning</option>
-      </select>
+      <select id="category-select" aria-label="Category"></select>
       <input type="date" id="due-date-input" aria-label="Due date (optional)">
     </div>
 
@@ -876,13 +1147,13 @@
       </select>
     </div>
 
-    <div class="category-filters" id="category-filters" aria-label="Filter by category">
-      <button class="active" data-category="all">All</button>
-      <button data-category="work">Work</button>
-      <button data-category="personal">Personal</button>
-      <button data-category="health">Health</button>
-      <button data-category="finance">Finance</button>
-      <button data-category="learning">Learning</button>
+    <div class="category-bar">
+      <div class="category-filters" id="category-filters" aria-label="Filter by category"></div>
+      <button class="manage-categories-btn" id="manage-categories-btn" aria-label="Manage categories">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
+        </svg>
+      </button>
     </div>
 
     <ul class="todo-list" id="todo-list" aria-live="polite"></ul>
@@ -901,11 +1172,28 @@
     </div>
   </dialog>
 
+  <dialog class="category-dialog" id="category-dialog">
+    <p class="category-dialog-title">Manage Categories</p>
+    <ul class="category-dialog-list" id="category-dialog-list"></ul>
+    <div class="add-category-form" id="add-category-form">
+      <p class="add-category-form-title">New category</p>
+      <input type="text" id="new-category-name" placeholder="Category name" maxlength="30">
+      <div class="color-picker" id="new-category-color-picker"></div>
+      <div class="add-category-actions">
+        <button class="add-category-btn" id="add-category-btn">Add</button>
+      </div>
+    </div>
+    <div class="category-dialog-footer">
+      <button class="category-dialog-done-btn" id="category-dialog-done">Done</button>
+    </div>
+  </dialog>
+
   <script>
     const STORAGE_KEY = 'catppuccin-todos';
+    const CATEGORIES_STORAGE_KEY = 'catppuccin-categories';
     const MAX_UNDO = 50;
 
-    const CATEGORIES = {
+    const DEFAULT_CATEGORIES = {
       general:  { label: 'General',  color: 'var(--ctp-overlay2)' },
       work:     { label: 'Work',     color: 'var(--ctp-blue)' },
       personal: { label: 'Personal', color: 'var(--ctp-mauve)' },
@@ -914,12 +1202,51 @@
       learning: { label: 'Learning', color: 'var(--ctp-sapphire)' },
     };
 
+    const PALETTE = [
+      'var(--ctp-rosewater)', 'var(--ctp-flamingo)', 'var(--ctp-pink)', 'var(--ctp-mauve)',
+      'var(--ctp-red)', 'var(--ctp-maroon)', 'var(--ctp-peach)', 'var(--ctp-yellow)',
+      'var(--ctp-green)', 'var(--ctp-teal)', 'var(--ctp-sky)', 'var(--ctp-sapphire)',
+      'var(--ctp-blue)', 'var(--ctp-lavender)', 'var(--ctp-overlay2)',
+    ];
+
+    function loadCategories() {
+      try {
+        const data = JSON.parse(localStorage.getItem(CATEGORIES_STORAGE_KEY));
+        if (!data || typeof data !== 'object' || Array.isArray(data)) return { ...DEFAULT_CATEGORIES };
+        // Ensure 'general' always exists
+        if (!data.general) data.general = { ...DEFAULT_CATEGORIES.general };
+        // Validate each entry
+        const result = {};
+        for (const [key, val] of Object.entries(data)) {
+          if (val && typeof val.label === 'string' && typeof val.color === 'string') {
+            result[key] = { label: val.label, color: val.color };
+          }
+        }
+        if (!result.general) result.general = { ...DEFAULT_CATEGORIES.general };
+        return result;
+      } catch {
+        return { ...DEFAULT_CATEGORIES };
+      }
+    }
+
+    function saveCategories() {
+      try {
+        localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(CATEGORIES));
+      } catch {
+        // localStorage quota exceeded
+      }
+    }
+
+    let CATEGORIES = loadCategories();
+
     let todos = loadTodos();
     let currentFilter = 'all';
     let currentCategory = 'all';
     let currentSort = 'newest';
     let lastAddedId = null;
     let editingId = null;
+    let editingCategoryKey = null;
+    let newCategoryColor = PALETTE[0];
     let undoStack = [];
     let toastTimer = null;
 
@@ -932,12 +1259,19 @@
     const categorySelect = document.getElementById('category-select');
     const dueDateInput = document.getElementById('due-date-input');
     const sortSelect = document.getElementById('sort-select');
-    const categoryFilterBtns = document.querySelectorAll('#category-filters button');
+    const categoryFiltersContainer = document.getElementById('category-filters');
     const toastContainer = document.getElementById('toast-container');
     const deleteDialog = document.getElementById('delete-dialog');
     const deleteDialogText = document.getElementById('delete-dialog-text');
     const deleteDialogCancel = document.getElementById('delete-dialog-cancel');
     const deleteDialogConfirm = document.getElementById('delete-dialog-confirm');
+    const categoryDialog = document.getElementById('category-dialog');
+    const categoryDialogList = document.getElementById('category-dialog-list');
+    const manageCategoriesBtn = document.getElementById('manage-categories-btn');
+    const addCategoryBtn = document.getElementById('add-category-btn');
+    const newCategoryNameInput = document.getElementById('new-category-name');
+    const newCategoryColorPicker = document.getElementById('new-category-color-picker');
+    const categoryDialogDone = document.getElementById('category-dialog-done');
     let pendingDeleteId = null;
 
     function loadTodos() {
@@ -973,7 +1307,7 @@
 
     // --- Undo system ---
     function pushUndo(label) {
-      undoStack.push({ label, snapshot: JSON.stringify(todos) });
+      undoStack.push({ label, snapshot: JSON.stringify(todos), categoriesSnapshot: JSON.stringify(CATEGORIES) });
       if (undoStack.length > MAX_UNDO) undoStack.shift();
     }
 
@@ -981,6 +1315,12 @@
       if (undoStack.length === 0) return;
       const entry = undoStack.pop();
       todos = JSON.parse(entry.snapshot);
+      if (entry.categoriesSnapshot) {
+        CATEGORIES = JSON.parse(entry.categoriesSnapshot);
+        saveCategories();
+        renderCategoryFilters();
+        renderCategorySelect();
+      }
       editingId = null;
       save();
       render();
@@ -1071,6 +1411,181 @@
       save();
       render();
       showToast(`Cleared ${count} completed task${count !== 1 ? 's' : ''}`);
+    }
+
+    // --- Category management ---
+    function generateCategoryKey(label) {
+      let key = label.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      if (!key) key = 'category';
+      let finalKey = key;
+      let counter = 1;
+      while (CATEGORIES[finalKey]) {
+        finalKey = `${key}-${counter}`;
+        counter++;
+      }
+      return finalKey;
+    }
+
+    function getColorName(cssVar) {
+      const match = cssVar.match(/--ctp-(\w+)/);
+      return match ? match[1].charAt(0).toUpperCase() + match[1].slice(1) : '';
+    }
+
+    function renderCategorySelect() {
+      const currentValue = categorySelect.value;
+      categorySelect.innerHTML = Object.entries(CATEGORIES).map(([key, cat]) =>
+        `<option value="${escapeAttr(key)}">${escapeHtml(cat.label)}</option>`
+      ).join('');
+      if (CATEGORIES[currentValue]) categorySelect.value = currentValue;
+    }
+
+    function renderCategoryFilters() {
+      categoryFiltersContainer.innerHTML =
+        `<button class="${currentCategory === 'all' ? 'active' : ''}" data-category="all">All</button>` +
+        Object.entries(CATEGORIES).map(([key, cat]) =>
+          `<button class="${currentCategory === key ? 'active' : ''}" data-category="${escapeAttr(key)}">${escapeHtml(cat.label)}</button>`
+        ).join('');
+    }
+
+    function renderColorPicker(container, selectedColor, onSelect) {
+      container.innerHTML = PALETTE.map(color =>
+        `<button type="button" class="color-swatch ${color === selectedColor ? 'selected' : ''}" data-color="${escapeAttr(color)}" style="background: ${color}" aria-label="${getColorName(color)}"></button>`
+      ).join('');
+      container.onclick = (e) => {
+        const swatch = e.target.closest('.color-swatch');
+        if (!swatch) return;
+        container.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+        swatch.classList.add('selected');
+        onSelect(swatch.dataset.color);
+      };
+    }
+
+    function renderCategoryDialog() {
+      categoryDialogList.innerHTML = Object.entries(CATEGORIES).map(([key, cat]) => {
+        const isGeneral = key === 'general';
+        const isEditing = key === editingCategoryKey;
+
+        if (isEditing) {
+          return `
+          <li class="category-dialog-item editing" data-key="${escapeAttr(key)}">
+            <span class="category-dialog-dot" style="background: ${cat.color}"></span>
+            <span class="category-dialog-label">${escapeHtml(cat.label)}</span>
+            <div class="category-edit-form">
+              <input type="text" value="${escapeAttr(cat.label)}" maxlength="30" aria-label="Category name" id="edit-category-name">
+              <div class="color-picker" id="edit-category-color-picker"></div>
+              <div class="category-edit-form-actions">
+                <button class="edit-cancel-btn" data-action="cancel-edit-category">Cancel</button>
+                <button class="edit-save-btn" data-action="save-edit-category">Save</button>
+              </div>
+            </div>
+          </li>`;
+        }
+
+        return `
+        <li class="category-dialog-item" data-key="${escapeAttr(key)}">
+          <span class="category-dialog-dot" style="background: ${cat.color}"></span>
+          <span class="category-dialog-label">${escapeHtml(cat.label)}</span>
+          <div class="category-dialog-item-actions">
+            <button class="category-edit-btn" data-action="edit-category" aria-label="Edit ${escapeAttr(cat.label)}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>
+              </svg>
+            </button>
+            ${isGeneral ? '' : `
+            <button class="category-delete-btn" data-action="delete-category" aria-label="Delete ${escapeAttr(cat.label)}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>`}
+          </div>
+        </li>`;
+      }).join('');
+
+      // Wire up color picker for editing category
+      if (editingCategoryKey) {
+        const pickerEl = document.getElementById('edit-category-color-picker');
+        if (pickerEl) {
+          renderColorPicker(pickerEl, CATEGORIES[editingCategoryKey].color, () => {});
+        }
+        const editInput = document.getElementById('edit-category-name');
+        if (editInput) {
+          editInput.focus();
+          editInput.setSelectionRange(editInput.value.length, editInput.value.length);
+        }
+      }
+    }
+
+    function openCategoryDialog() {
+      editingCategoryKey = null;
+      newCategoryColor = PALETTE[0];
+      newCategoryNameInput.value = '';
+      renderCategoryDialog();
+      renderColorPicker(newCategoryColorPicker, newCategoryColor, (color) => { newCategoryColor = color; });
+      categoryDialog.showModal();
+    }
+
+    function addCategory() {
+      const label = newCategoryNameInput.value.trim();
+      if (!label) return;
+      const key = generateCategoryKey(label);
+      CATEGORIES[key] = { label, color: newCategoryColor };
+      saveCategories();
+      newCategoryNameInput.value = '';
+      newCategoryColor = PALETTE[0];
+      renderColorPicker(newCategoryColorPicker, newCategoryColor, (color) => { newCategoryColor = color; });
+      renderCategoryDialog();
+      renderCategoryFilters();
+      renderCategorySelect();
+    }
+
+    function startEditCategory(key) {
+      if (!CATEGORIES[key]) return;
+      editingCategoryKey = key;
+      renderCategoryDialog();
+    }
+
+    function saveEditCategory() {
+      const key = editingCategoryKey;
+      if (!key || !CATEGORIES[key]) return;
+      const nameInput = document.getElementById('edit-category-name');
+      const pickerEl = document.getElementById('edit-category-color-picker');
+      if (!nameInput) return;
+      const newLabel = nameInput.value.trim();
+      if (!newLabel) return;
+      const selectedSwatch = pickerEl?.querySelector('.color-swatch.selected');
+      const newColor = selectedSwatch ? selectedSwatch.dataset.color : CATEGORIES[key].color;
+
+      CATEGORIES[key] = { label: newLabel, color: newColor };
+      editingCategoryKey = null;
+      saveCategories();
+      renderCategoryDialog();
+      renderCategoryFilters();
+      renderCategorySelect();
+      render();
+    }
+
+    function cancelEditCategory() {
+      editingCategoryKey = null;
+      renderCategoryDialog();
+    }
+
+    function deleteCategory(key) {
+      if (key === 'general' || !CATEGORIES[key]) return;
+      const label = CATEGORIES[key].label;
+      pushUndo('Category deleted');
+      todos.forEach(t => {
+        if (t.category === key) t.category = 'general';
+      });
+      delete CATEGORIES[key];
+      if (currentCategory === key) currentCategory = 'all';
+      editingCategoryKey = null;
+      saveCategories();
+      save();
+      renderCategoryDialog();
+      renderCategoryFilters();
+      renderCategorySelect();
+      render();
+      showToast(`Deleted "${label}" category`);
     }
 
     function startEdit(id) {
@@ -1223,6 +1738,7 @@
     }
 
     function render() {
+      renderCategoryFilters();
       const filtered = getSorted(getFiltered());
       const activeCount = todos.filter(t => !t.completed).length;
       const completedCount = todos.filter(t => t.completed).length;
@@ -1234,7 +1750,7 @@
         let msg = 'Add a task to get started';
         if (currentFilter === 'active') msg = 'No active tasks';
         if (currentFilter === 'completed') msg = 'No completed tasks';
-        if (currentCategory !== 'all') msg = `No ${CATEGORIES[currentCategory]?.label || ''} tasks`.trim();
+        if (currentCategory !== 'all') msg = `No ${escapeHtml(CATEGORIES[currentCategory]?.label || '')} tasks`.trim();
         list.innerHTML = `
           <li class="empty-state">
             <div class="icon">${currentFilter === 'completed' ? '\u2713' : '\u2610'}</div>
@@ -1377,13 +1893,53 @@
       render();
     });
 
-    categoryFilterBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        categoryFilterBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentCategory = btn.dataset.category;
-        render();
-      });
+    categoryFiltersContainer.addEventListener('click', e => {
+      const btn = e.target.closest('button[data-category]');
+      if (!btn) return;
+      categoryFiltersContainer.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentCategory = btn.dataset.category;
+      render();
+    });
+
+    // Category management dialog
+    manageCategoriesBtn.addEventListener('click', openCategoryDialog);
+    addCategoryBtn.addEventListener('click', addCategory);
+    categoryDialogDone.addEventListener('click', () => {
+      editingCategoryKey = null;
+      categoryDialog.close();
+    });
+    categoryDialog.addEventListener('cancel', () => { editingCategoryKey = null; });
+
+    newCategoryNameInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addCategory();
+      }
+    });
+
+    categoryDialogList.addEventListener('click', e => {
+      const item = e.target.closest('.category-dialog-item');
+      if (!item) return;
+      const key = item.dataset.key;
+
+      const action = e.target.closest('[data-action]');
+      if (!action) return;
+
+      if (action.dataset.action === 'edit-category') startEditCategory(key);
+      if (action.dataset.action === 'delete-category') deleteCategory(key);
+      if (action.dataset.action === 'save-edit-category') saveEditCategory();
+      if (action.dataset.action === 'cancel-edit-category') cancelEditCategory();
+    });
+
+    categoryDialogList.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.target.matches('#edit-category-name')) {
+        e.preventDefault();
+        saveEditCategory();
+      }
+      if (e.key === 'Escape' && editingCategoryKey) {
+        cancelEditCategory();
+      }
     });
 
     // Ctrl+Z / Cmd+Z for undo
@@ -1401,6 +1957,8 @@
     }, 60_000);
 
     // Initial render
+    renderCategoryFilters();
+    renderCategorySelect();
     render();
   </script>
 </body>
