@@ -37,11 +37,12 @@ Events have a date (all-day or timed), an optional location, and notes. The cale
 | Anytime | Open tasks plus anything labeled `browse` or `15min`. Sortable by label priority, A→Z, or newest. |
 | Recurring | Recurring tasks due today or earlier |
 | Done | Last 50 completed items (reopenable). Items auto-purge 90 days after completion. |
-| All | Everything, with title search, type filter (tasks / events / grouped), and sort (newest / A→Z / due date) |
+| All | Everything, with title search, type filter (tasks / events), and sort (newest / due date) |
 
 ### Other stuff
 
 - Ctrl+Z / Cmd+Z undoes the last action, up to 20 levels
+- `?` opens the GitHub repo
 - Stale dependency references are cleaned up on load
 - View transitions between tabs (Chrome/Edge)
 - Sticky section headings with backdrop blur in Active view
