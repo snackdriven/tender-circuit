@@ -479,6 +479,7 @@ let authSession = null;   // { accessToken, refreshToken, expiresAt, userId, ema
 let syncStatus = 'idle';  // 'idle' | 'syncing' | 'synced' | 'error' | 'pending'
 let syncTimer = null;
 let lastSyncedAt = 0;
+let calendarMode = 'day'; // 'day' | 'agenda'
 
 // === Composable Filter Predicates ===
 const allPreds = (...preds) => (item) => preds.every(p => p(item));
@@ -917,7 +918,8 @@ function render() {
   content.setAttribute('role', 'tabpanel');
 
   if (currentView === 'calendar') {
-    content.appendChild(renderWeekStrip());
+    content.appendChild(renderCalendarModeToggle());
+    if (calendarMode === 'day') content.appendChild(renderWeekStrip());
   }
 
   if (currentView === 'all') {
@@ -949,14 +951,18 @@ function render() {
       content.appendChild(list);
     }
   } else {
-    const viewItems = getViewItems(currentView);
-    if (viewItems.length === 0) {
-      content.appendChild(renderEmptyState());
+    if (currentView === 'calendar' && calendarMode === 'agenda') {
+      content.appendChild(renderAgendaView());
     } else {
-      const readOnly = currentView === 'done';
-      const list = el('ul', { className: 'item-list' });
-      viewItems.forEach(item => list.appendChild(renderItemCard(item, { readOnly })));
-      content.appendChild(list);
+      const viewItems = getViewItems(currentView);
+      if (viewItems.length === 0) {
+        content.appendChild(renderEmptyState());
+      } else {
+        const readOnly = currentView === 'done';
+        const list = el('ul', { className: 'item-list' });
+        viewItems.forEach(item => list.appendChild(renderItemCard(item, { readOnly })));
+        content.appendChild(list);
+      }
     }
   }
 
@@ -1241,6 +1247,54 @@ function buildTaskForm() {
 
   setTimeout(() => titleInput.focus(), 0);
   return form;
+}
+
+// === Calendar Mode Toggle & Agenda ===
+function renderCalendarModeToggle() {
+  const toggle = el('div', { className: 'calendar-mode-toggle' });
+  ['day', 'agenda'].forEach(mode => {
+    const btn = el('button', {
+      className: `calendar-mode-btn${calendarMode === mode ? ' active' : ''}`,
+      text: mode === 'day' ? 'Day' : 'Agenda',
+    });
+    btn.addEventListener('click', () => { calendarMode = mode; render(); });
+    toggle.appendChild(btn);
+  });
+  return toggle;
+}
+
+function renderAgendaView() {
+  const today = todayStr();
+  const upcoming = items
+    .filter(i => i.type === 'event' && (i.dateTime || '').slice(0, 10) >= today)
+    .sort((a, b) => (a.dateTime || '').localeCompare(b.dateTime || ''));
+
+  if (upcoming.length === 0) {
+    return el('div', { className: 'empty-state' }, [el('p', { text: 'No upcoming events' })]);
+  }
+
+  const groups = new Map();
+  for (const event of upcoming) {
+    const date = (event.dateTime || '').slice(0, 10);
+    if (!groups.has(date)) groups.set(date, []);
+    groups.get(date).push(event);
+  }
+
+  const container = el('div', { className: 'agenda-view' });
+  for (const [date, events] of groups) {
+    const [y, m, d] = date.split('-').map(Number);
+    const isToday = date === today;
+    const label = isToday
+      ? 'Today'
+      : new Date(y, m - 1, d).toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' });
+    const section = el('div', { className: 'agenda-date-group' });
+    section.appendChild(el('p', { className: `agenda-date-heading${isToday ? ' today' : ''}`, text: label }));
+    const list = el('ul', { className: 'item-list' });
+    events.forEach(e => list.appendChild(renderItemCard(e)));
+    section.appendChild(list);
+    container.appendChild(section);
+  }
+  return container;
 }
 
 // === Week Strip (Calendar) ===

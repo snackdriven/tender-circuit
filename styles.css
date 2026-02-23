@@ -1042,6 +1042,61 @@
     outline-offset: 2px;
   }
 
+  /* Calendar mode toggle (Day / Agenda) */
+  .calendar-mode-toggle {
+    display: flex;
+    gap: var(--space-xs);
+  }
+
+  .calendar-mode-btn {
+    padding: var(--space-xs) var(--space-md);
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--ctp-overlay1);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    min-block-size: 32px;
+
+    &.active {
+      background: var(--ctp-surface0);
+      color: var(--ctp-text);
+    }
+
+    &:hover:not(.active) {
+      color: var(--ctp-subtext0);
+    }
+  }
+
+  /* Agenda view */
+  .agenda-view {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+  }
+
+  .agenda-date-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .agenda-date-heading {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ctp-subtext0);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding-inline-start: var(--space-xs);
+
+    &.today {
+      color: var(--ctp-peach);
+    }
+  }
+
   /* All view: reveal actions on hover (desktop) or tap (mobile) */
   .item-card.reveal-on-interact .item-actions {
     opacity: 0;
