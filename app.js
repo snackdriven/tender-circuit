@@ -482,6 +482,7 @@ let lastSyncedAt = 0;
 let calendarMode = 'day'; // 'day' | 'agenda'
 let activeViewWindow = ACTIVE_WINDOW_DAYS; // days ahead; null = no limit
 let allSortOrder = 'newest'; // 'newest' | 'alpha' | 'due'
+let allTypeFilter = 'all';  // 'all' | 'task' | 'event'
 
 // === Composable Filter Predicates ===
 const allPreds = (...preds) => (item) => preds.every(p => p(item));
@@ -513,7 +514,7 @@ function getViewItems(viewName) {
     browse:    allPreds(isTask, isActiveish, anyPred(isOpen, hasLabel('browse'), hasLabel('15min'))),
     recurring: allPreds(isTask, isRecurring, recurringDue(today), notDone),
     done:      isDone,
-    all:       () => true,
+    all:       (item) => allTypeFilter === 'all' || item.type === allTypeFilter,
   };
 
   const filter = VIEWS[viewName];
@@ -939,6 +940,7 @@ function render() {
 
   if (currentView === 'all') {
     content.appendChild(renderSearchBar());
+    content.appendChild(renderAllTypeFilter());
     content.appendChild(renderAllSortToggle());
   }
 
@@ -1286,6 +1288,25 @@ function buildTaskForm() {
 
   setTimeout(() => titleInput.focus(), 0);
   return form;
+}
+
+// === All View Type Filter ===
+function renderAllTypeFilter() {
+  const toggle = el('div', { className: 'calendar-mode-toggle' });
+  const options = [
+    { label: 'All',    value: 'all'   },
+    { label: 'Tasks',  value: 'task'  },
+    { label: 'Events', value: 'event' },
+  ];
+  options.forEach(({ label, value }) => {
+    const btn = el('button', {
+      className: `calendar-mode-btn${allTypeFilter === value ? ' active' : ''}`,
+      text: label,
+    });
+    btn.addEventListener('click', () => { allTypeFilter = value; render(); });
+    toggle.appendChild(btn);
+  });
+  return toggle;
 }
 
 // === All View Sort Toggle ===
