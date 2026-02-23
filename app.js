@@ -89,13 +89,67 @@ function formatCountdown(dueDate) {
   }
 }
 
-function formatDateTime(dateTime) {
+function formatDateTime(dateTime, allDay) {
   if (!dateTime) return '';
   try {
+    if (allDay) {
+      const [y, m, d] = dateTime.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      if (isNaN(dt.getTime())) return dateTime;
+      return dt.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' }) + ' · All day';
+    }
     const dt = new Date(dateTime);
     if (isNaN(dt.getTime())) return dateTime;
     return dt.toLocaleString('en', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
   } catch { return dateTime; }
+}
+
+function formatEventCountdown(dateTime, allDay) {
+  if (!dateTime) return null;
+  const today = todayStr();
+  const eventDate = dateTime.slice(0, 10); // YYYY-MM-DD portion
+
+  if (eventDate < today) {
+    const [ty, tm, td] = today.split('-').map(Number);
+    const [ey, em, ed] = eventDate.split('-').map(Number);
+    const todayMs = new Date(ty, tm - 1, td).getTime();
+    const eventMs = new Date(ey, em - 1, ed).getTime();
+    const days = Math.round((todayMs - eventMs) / DAY_MS);
+    if (days === 1) return { text: 'Yesterday', cls: 'overdue' };
+    return { text: `${days}d ago`, cls: 'overdue' };
+  } else if (eventDate === today) {
+    if (allDay) return { text: 'Today', cls: 'due-soon' };
+    // For timed events today, show time remaining or elapsed
+    const now = new Date();
+    const eventTime = new Date(dateTime);
+    const diffMs = eventTime - now;
+    if (diffMs > 60000) {
+      // More than 1 minute away
+      const hours = Math.floor(diffMs / 3600000);
+      const mins = Math.floor((diffMs % 3600000) / 60000);
+      if (hours > 0) return { text: `In ${hours}h ${mins}m`, cls: 'due-soon' };
+      return { text: `In ${mins}m`, cls: 'due-soon' };
+    } else if (diffMs > -60000) {
+      // Within ±1 minute of start time
+      return { text: 'Now', cls: 'due-soon' };
+    } else {
+      // Past event today — show how long ago
+      const agoMs = -diffMs;
+      const hours = Math.floor(agoMs / 3600000);
+      const mins = Math.floor((agoMs % 3600000) / 60000);
+      if (hours > 0) return { text: `${hours}h ${mins}m ago`, cls: 'overdue' };
+      return { text: `${mins}m ago`, cls: 'overdue' };
+    }
+  } else {
+    const [ty, tm, td] = today.split('-').map(Number);
+    const [ey, em, ed] = eventDate.split('-').map(Number);
+    const todayMs = new Date(ty, tm - 1, td).getTime();
+    const eventMs = new Date(ey, em - 1, ed).getTime();
+    const days = Math.round((eventMs - todayMs) / DAY_MS);
+    if (days === 1) return { text: 'Tomorrow', cls: 'due-soon' };
+    if (days <= 7) return { text: `In ${days}d`, cls: 'due-soon' };
+    return { text: `In ${days}d`, cls: 'due-later' };
+  }
 }
 
 // === DOM Helper ===
@@ -173,12 +227,20 @@ function validateItem(item) {
   // Events
   if (item.type === 'event') {
     if (typeof item.title !== 'string' || !item.title.trim()) return null;
-    if (typeof item.dateTime !== 'string' || !DATETIME_RE.test(item.dateTime) || isNaN(Date.parse(item.dateTime))) return null;
+    const allDay = !!item.allDay;
+    // All-day events use YYYY-MM-DD, timed events use YYYY-MM-DDTHH:MM
+    if (typeof item.dateTime !== 'string') return null;
+    if (allDay) {
+      if (!DATE_RE.test(item.dateTime)) return null;
+    } else {
+      if (!DATETIME_RE.test(item.dateTime) || isNaN(Date.parse(item.dateTime))) return null;
+    }
     return {
       id: typeof item.id === 'string' ? item.id : crypto.randomUUID(),
       type: 'event',
       title: item.title.trim().slice(0, 500),
       dateTime: item.dateTime,
+      allDay,
       location: typeof item.location === 'string' ? item.location.trim().slice(0, 500) : '',
       notes: typeof item.notes === 'string' ? item.notes.trim().slice(0, 2000) : '',
       createdAt: typeof item.createdAt === 'number' && item.createdAt > 0 ? item.createdAt : now,
@@ -561,6 +623,7 @@ function createEvent(formData) {
       type: 'event',
       title: formData.title.trim().slice(0, 500),
       dateTime: formData.dateTime,
+      allDay: !!formData.allDay,
       location: (formData.location || '').trim().slice(0, 500),
       notes: (formData.notes || '').trim().slice(0, 2000),
       createdAt: Date.now(),
@@ -793,6 +856,7 @@ function saveEventEdit(id, formData) {
   mutate('Event updated', () => {
     event.title = formData.title.trim().slice(0, 500);
     event.dateTime = formData.dateTime || event.dateTime;
+    event.allDay = !!formData.allDay;
     event.location = (formData.location || '').trim().slice(0, 500);
     event.notes = (formData.notes || '').trim().slice(0, 2000);
     return true;
@@ -963,8 +1027,32 @@ function buildEventForm() {
   const titleInput = el('input', { type: 'text', placeholder: 'Event title', maxlength: 500, required: true, autocomplete: 'off' });
   titleInput.setAttribute('aria-label', 'Event title');
 
+  // All-day toggle
+  const allDayRow = el('div', { className: 'form-row allday-row' });
+  const allDayLabel = el('label', { className: 'allday-label' });
+  const allDayCheck = el('input', { type: 'checkbox' });
+  allDayCheck.setAttribute('aria-label', 'All day event');
+  allDayLabel.append(allDayCheck, document.createTextNode(' All day'));
+  allDayRow.appendChild(allDayLabel);
+
+  // Date/time input — swaps between date and datetime-local
   const dateTimeInput = el('input', { type: 'datetime-local' });
   dateTimeInput.setAttribute('aria-label', 'Event date and time');
+
+  allDayCheck.addEventListener('change', () => {
+    const oldVal = dateTimeInput.value;
+    if (allDayCheck.checked) {
+      dateTimeInput.type = 'date';
+      dateTimeInput.setAttribute('aria-label', 'Event date');
+      // Preserve date portion if switching from datetime-local
+      if (oldVal && oldVal.includes('T')) dateTimeInput.value = oldVal.slice(0, 10);
+    } else {
+      dateTimeInput.type = 'datetime-local';
+      dateTimeInput.setAttribute('aria-label', 'Event date and time');
+      // Preserve date portion if switching from date
+      if (oldVal && !oldVal.includes('T')) dateTimeInput.value = oldVal + 'T12:00';
+    }
+  });
 
   const locationInput = el('input', { type: 'text', placeholder: 'Location (optional)', maxlength: 500, autocomplete: 'off' });
   locationInput.setAttribute('aria-label', 'Event location');
@@ -982,14 +1070,14 @@ function buildEventForm() {
     if (!title) { titleInput.focus(); return; }
     const dateTime = dateTimeInput.value;
     if (!dateTime) { dateTimeInput.focus(); return; }
-    createEvent({ title, dateTime, location: locationInput.value, notes: notesInput.value });
+    createEvent({ title, dateTime, allDay: allDayCheck.checked, location: locationInput.value, notes: notesInput.value });
     createFormType = null;
     render();
   });
 
   actions.appendChild(cancelBtn);
   actions.appendChild(submitBtn);
-  form.append(titleInput, dateTimeInput, locationInput, notesInput, actions);
+  form.append(titleInput, allDayRow, dateTimeInput, locationInput, notesInput, actions);
 
   setTimeout(() => titleInput.focus(), 0);
   return form;
@@ -1191,7 +1279,11 @@ function renderEventCard(event, opts = {}) {
 
   const meta = el('div', { className: 'item-meta' });
   if (event.dateTime) {
-    meta.appendChild(el('span', { className: 'event-time', text: formatDateTime(event.dateTime) }));
+    meta.appendChild(el('span', { className: 'event-time', text: formatDateTime(event.dateTime, event.allDay) }));
+  }
+  const eventCountdown = formatEventCountdown(event.dateTime, event.allDay);
+  if (eventCountdown) {
+    meta.appendChild(el('span', { className: `countdown ${eventCountdown.cls}`, text: eventCountdown.text }));
   }
   if (event.location) {
     meta.appendChild(el('span', { className: 'event-location', text: event.location }));
@@ -1462,8 +1554,32 @@ function renderEventEditForm(event) {
   const titleInput = el('input', { type: 'text', value: event.title, maxlength: 500 });
   titleInput.setAttribute('aria-label', 'Edit event title');
 
-  const dateTimeInput = el('input', { type: 'datetime-local', value: event.dateTime || '' });
-  dateTimeInput.setAttribute('aria-label', 'Event date and time');
+  // All-day toggle
+  const allDayRow = el('div', { className: 'form-row allday-row' });
+  const allDayLabel = el('label', { className: 'allday-label' });
+  const allDayCheck = el('input', { type: 'checkbox', checked: event.allDay });
+  allDayCheck.setAttribute('aria-label', 'All day event');
+  allDayLabel.append(allDayCheck, document.createTextNode(' All day'));
+  allDayRow.appendChild(allDayLabel);
+
+  const dateTimeInput = el('input', {
+    type: event.allDay ? 'date' : 'datetime-local',
+    value: event.dateTime || '',
+  });
+  dateTimeInput.setAttribute('aria-label', event.allDay ? 'Event date' : 'Event date and time');
+
+  allDayCheck.addEventListener('change', () => {
+    const oldVal = dateTimeInput.value;
+    if (allDayCheck.checked) {
+      dateTimeInput.type = 'date';
+      dateTimeInput.setAttribute('aria-label', 'Event date');
+      if (oldVal && oldVal.includes('T')) dateTimeInput.value = oldVal.slice(0, 10);
+    } else {
+      dateTimeInput.type = 'datetime-local';
+      dateTimeInput.setAttribute('aria-label', 'Event date and time');
+      if (oldVal && !oldVal.includes('T')) dateTimeInput.value = oldVal + 'T12:00';
+    }
+  });
 
   const locationInput = el('input', { type: 'text', value: event.location || '', placeholder: 'Location', maxlength: 500 });
   locationInput.setAttribute('aria-label', 'Event location');
@@ -1483,13 +1599,14 @@ function renderEventEditForm(event) {
     saveEventEdit(event.id, {
       title,
       dateTime: dateTimeInput.value,
+      allDay: allDayCheck.checked,
       location: locationInput.value,
       notes: notesInput.value,
     });
   });
 
   actions.append(cancelBtn, saveBtn);
-  form.append(titleInput, dateTimeInput, locationInput, notesInput, actions);
+  form.append(titleInput, allDayRow, dateTimeInput, locationInput, notesInput, actions);
   card.appendChild(form);
 
   setTimeout(() => titleInput.focus(), 0);

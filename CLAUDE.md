@@ -47,7 +47,8 @@ Pushing to `main` triggers `.github/workflows/deploy-pages.yml`, which deploys t
   id: string,            // crypto.randomUUID()
   type: 'event',
   title: string,         // Max 500 chars
-  dateTime: string,      // ISO8601 YYYY-MM-DDTHH:MM
+  allDay: boolean,       // true = date-only event, false = timed event
+  dateTime: string,      // YYYY-MM-DD (all-day) or YYYY-MM-DDTHH:MM (timed)
   location: string,      // Max 500 chars
   notes: string,         // Max 2000 chars
   createdAt: number,     // Date.now() timestamp
