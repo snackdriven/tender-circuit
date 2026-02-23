@@ -1310,7 +1310,17 @@ function renderItemCard(item, opts = {}) {
   if (editingId === item.id && !opts.readOnly) {
     return item.type === 'event' ? renderEventEditForm(item) : renderTaskEditForm(item);
   }
-  return item.type === 'event' ? renderEventCard(item, opts) : renderTaskCard(item, opts);
+  const card = item.type === 'event' ? renderEventCard(item, opts) : renderTaskCard(item, opts);
+  if (currentView === 'all') {
+    card.classList.add('reveal-on-interact');
+    card.addEventListener('click', e => {
+      if (e.target.closest('button, input, label')) return;
+      document.querySelectorAll('.item-card.reveal-on-interact.selected')
+        .forEach(c => { if (c !== card) c.classList.remove('selected'); });
+      card.classList.toggle('selected');
+    });
+  }
+  return card;
 }
 
 function renderEventCard(event, opts = {}) {

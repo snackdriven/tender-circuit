@@ -1042,6 +1042,23 @@
     outline-offset: 2px;
   }
 
+  /* All view: reveal actions on hover (desktop) or tap (mobile) */
+  .item-card.reveal-on-interact .item-actions {
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .item-card.reveal-on-interact.selected .item-actions {
+    opacity: 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .item-card.reveal-on-interact:hover .item-actions,
+    .item-card.reveal-on-interact:focus-within .item-actions {
+      opacity: 1;
+    }
+  }
+
   /* Login screen */
   .login-screen {
     display: flex;
