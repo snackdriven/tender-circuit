@@ -481,6 +481,7 @@ let syncTimer = null;
 let lastSyncedAt = 0;
 let calendarMode = 'day'; // 'day' | 'agenda'
 let activeViewWindow = ACTIVE_WINDOW_DAYS; // days ahead; null = no limit
+let allSortOrder = 'newest'; // 'newest' | 'alpha' | 'due'
 
 // === Composable Filter Predicates ===
 const allPreds = (...preds) => (item) => preds.every(p => p(item));
@@ -571,7 +572,18 @@ function sortForView(arr, viewName, today) {
       sorted.sort((a, b) => b.updatedAt - a.updatedAt);
       break;
     case 'all':
-      sorted.sort((a, b) => b.createdAt - a.createdAt);
+      if (allSortOrder === 'alpha') {
+        sorted.sort((a, b) => a.title.localeCompare(b.title));
+      } else if (allSortOrder === 'due') {
+        const getDate = i => i.dueDate || (i.dateTime ? i.dateTime.slice(0, 10) : null);
+        sorted.sort((a, b) => {
+          const da = getDate(a) || '9999-99-99';
+          const db = getDate(b) || '9999-99-99';
+          return da.localeCompare(db) || a.title.localeCompare(b.title);
+        });
+      } else {
+        sorted.sort((a, b) => b.createdAt - a.createdAt);
+      }
       break;
   }
   return sorted;
@@ -927,6 +939,7 @@ function render() {
 
   if (currentView === 'all') {
     content.appendChild(renderSearchBar());
+    content.appendChild(renderAllSortToggle());
   }
 
   // For Active view, render Overdue / Due Today / Upcoming sections
@@ -1273,6 +1286,25 @@ function buildTaskForm() {
 
   setTimeout(() => titleInput.focus(), 0);
   return form;
+}
+
+// === All View Sort Toggle ===
+function renderAllSortToggle() {
+  const toggle = el('div', { className: 'calendar-mode-toggle' });
+  const options = [
+    { label: 'Newest', value: 'newest' },
+    { label: 'A→Z',    value: 'alpha'  },
+    { label: 'Due',    value: 'due'    },
+  ];
+  options.forEach(({ label, value }) => {
+    const btn = el('button', {
+      className: `calendar-mode-btn${allSortOrder === value ? ' active' : ''}`,
+      text: label,
+    });
+    btn.addEventListener('click', () => { allSortOrder = value; render(); });
+    toggle.appendChild(btn);
+  });
+  return toggle;
 }
 
 // === Active Window Toggle ===
