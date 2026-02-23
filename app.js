@@ -480,6 +480,7 @@ let syncStatus = 'idle';  // 'idle' | 'syncing' | 'synced' | 'error' | 'pending'
 let syncTimer = null;
 let lastSyncedAt = 0;
 let calendarMode = 'day'; // 'day' | 'agenda'
+let activeViewWindow = ACTIVE_WINDOW_DAYS; // days ahead; null = no limit
 
 // === Composable Filter Predicates ===
 const allPreds = (...preds) => (item) => preds.every(p => p(item));
@@ -496,13 +497,13 @@ const isRecurring = (item) => item.timeState === 'recurring';
 const hasLabel    = (l) => (item) => (item.labels || []).includes(l);
 const onDate      = (d) => (item) => item.dueDate === d || (item.dateTime || '').startsWith(d);
 const inWindow    = (today, windowEnd) => (item) =>
-  item.activationDate <= today && item.dueDate >= today && item.dueDate <= windowEnd;
+  item.activationDate <= today && item.dueDate >= today && (!windowEnd || item.dueDate <= windowEnd);
 const isOverdue   = (today) => (item) => item.dueDate && item.dueDate < today;
 const recurringDue = (today) => (item) => item.dueDate && item.dueDate <= today;
 
 function getViewItems(viewName) {
   const today = todayStr();
-  const windowEnd = addDays(today, ACTIVE_WINDOW_DAYS);
+  const windowEnd = activeViewWindow !== null ? addDays(today, activeViewWindow) : null;
 
   const VIEWS = {
     calendar:  onDate(selectedDate),
@@ -928,6 +929,7 @@ function render() {
 
   // For Active view, render Overdue / Due Today / Upcoming sections
   if (currentView === 'active') {
+    content.appendChild(renderActiveWindowToggle());
     const overdueItems = getViewItems('overdue');
     const today = todayStr();
     const activeItems = getViewItems('active');
@@ -1264,6 +1266,25 @@ function buildTaskForm() {
 
   setTimeout(() => titleInput.focus(), 0);
   return form;
+}
+
+// === Active Window Toggle ===
+function renderActiveWindowToggle() {
+  const toggle = el('div', { className: 'calendar-mode-toggle' });
+  const options = [
+    { label: '10 days', value: 10 },
+    { label: '30 days', value: 30 },
+    { label: 'All', value: null },
+  ];
+  options.forEach(({ label, value }) => {
+    const btn = el('button', {
+      className: `calendar-mode-btn${activeViewWindow === value ? ' active' : ''}`,
+      text: label,
+    });
+    btn.addEventListener('click', () => { activeViewWindow = value; render(); });
+    toggle.appendChild(btn);
+  });
+  return toggle;
 }
 
 // === Calendar Mode Toggle & Agenda ===
@@ -1789,7 +1810,7 @@ function renderEventEditForm(event) {
 function renderEmptyState() {
   const messages = {
     calendar: 'Nothing on this day',
-    active: 'All clear — nothing due in the next 10 days',
+    active: activeViewWindow === null ? 'All clear — no upcoming tasks' : `All clear — nothing due in the next ${activeViewWindow} days`,
     browse: 'No open tasks to browse',
     recurring: 'No recurring tasks due',
     done: 'No completed tasks',
