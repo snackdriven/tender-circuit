@@ -986,6 +986,98 @@
     outline: 2px solid var(--ctp-mauve);
     outline-offset: 2px;
   }
+
+  /* Login screen */
+  .login-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-block-size: 60dvh;
+    gap: var(--space-2xl);
+  }
+
+  .login-form-area,
+  .login-sent-area {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    inline-size: 100%;
+    max-inline-size: 24rem;
+  }
+
+  .login-form-area input[type="email"] {
+    inline-size: 100%;
+    padding: var(--space-md) var(--space-lg);
+    border: 2px solid var(--ctp-surface2);
+    border-radius: var(--radius-md);
+    background: var(--ctp-mantle);
+    color: var(--ctp-text);
+    font-family: inherit;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    outline: none;
+    transition: border-color 0.2s;
+    min-block-size: var(--touch-min);
+
+    &:focus {
+      border-color: var(--ctp-mauve);
+      outline: 2px solid var(--ctp-mauve);
+      outline-offset: 2px;
+    }
+
+    &::placeholder {
+      color: var(--ctp-overlay0);
+    }
+  }
+
+  .login-subtitle {
+    color: var(--ctp-subtext0);
+    font-size: 0.9rem;
+  }
+
+  .login-hint {
+    color: var(--ctp-overlay1);
+    font-size: 0.85rem;
+    min-block-size: 1.2em;
+  }
+
+  /* Sync dot */
+  .sync-dot {
+    inline-size: 8px;
+    block-size: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    transition: background 0.3s, opacity 0.3s;
+
+    &.idle    { opacity: 0; }
+    &.syncing { background: var(--ctp-yellow); animation: sync-pulse 1s infinite; }
+    &.synced  { background: var(--ctp-green); }
+    &.error   { background: var(--ctp-red); }
+    &.pending { background: var(--ctp-peach); }
+  }
+
+  @keyframes sync-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+  }
+
+  /* Sign-out button */
+  .sign-out-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--ctp-overlay0);
+    font-family: inherit;
+    font-size: 0.75rem;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+
+    &:hover {
+      color: var(--ctp-subtext0);
+      background: var(--ctp-surface0);
+    }
+  }
 }
 
 @layer a11y {

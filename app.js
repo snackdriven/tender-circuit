@@ -13,6 +13,9 @@ const MAX_UNDO = 20;
 const PURGE_DAYS = 90;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
+const AUTH_KEY = 'tc-auth';
+const SUPABASE_URL = 'https://pynmkrcbkcfxifnztnrn.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_8VEm7zR0vqKjOZRwH6jimw_qIWt-RPp';
 
 // === Date Utilities ===
 function todayStr() {
@@ -431,7 +434,7 @@ function migrateFromV0(oldTodos) {
     .filter(Boolean);
 }
 
-function saveItems() {
+function saveItems(skipSync = false) {
   // Auto-purge: drop done items older than PURGE_DAYS
   const now = Date.now();
   items = items.filter(item =>
@@ -448,6 +451,7 @@ function saveItems() {
   } catch {
     showToast("Couldn't save — storage full. Edits may be lost after reload.");
   }
+  if (authSession && !skipSync) debouncedPush();
 }
 
 function cleanOrphanDependencies() {
@@ -470,6 +474,10 @@ let undoStack = [];
 let toastTimer = null;
 let pendingDeleteId = null;
 let searchQuery = '';
+let authSession = null;   // { accessToken, refreshToken, expiresAt, userId, email }
+let syncStatus = 'idle';  // 'idle' | 'syncing' | 'synced' | 'error' | 'pending'
+let syncTimer = null;
+let lastSyncedAt = 0;
 
 // === Composable Filter Predicates ===
 const allPreds = (...preds) => (item) => preds.every(p => p(item));
@@ -887,6 +895,7 @@ function reopenItem(id) {
 
 // === Rendering ===
 function render() {
+  if (!document.getElementById('view-nav')) return;
   renderViewNav();
   renderCreateToggle();
 
@@ -955,6 +964,19 @@ function render() {
   const taskCount = document.getElementById('task-count');
   const activeCount = items.filter(i => i.type === 'task' && i.status !== 'done').length;
   taskCount.textContent = `${activeCount} active`;
+
+  // Sign-out button in header
+  const headerActions = document.getElementById('header-actions');
+  if (headerActions) {
+    headerActions.innerHTML = '';
+    if (authSession) {
+      const signOutBtn = el('button', { className: 'sign-out-btn', text: 'Sign out' });
+      signOutBtn.addEventListener('click', () => clearAuthSession());
+      headerActions.appendChild(signOutBtn);
+    }
+  }
+
+  renderSyncIndicator();
 }
 
 function renderViewNav() {
@@ -1632,8 +1654,276 @@ function renderEmptyState() {
   ]);
 }
 
+// === Auth & Sync ===
+function loadAuthSession() {
+  try {
+    const raw = localStorage.getItem(AUTH_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.accessToken || !parsed.refreshToken) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function saveAuthSession(session) {
+  authSession = session;
+  try { localStorage.setItem(AUTH_KEY, JSON.stringify(session)); } catch { /* skip */ }
+}
+
+async function clearAuthSession() {
+  if (authSession) {
+    try {
+      await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authSession.accessToken}`,
+          'apikey': SUPABASE_ANON_KEY,
+        },
+      });
+    } catch { /* ignore */ }
+  }
+  authSession = null;
+  try { localStorage.removeItem(AUTH_KEY); } catch { /* ok */ }
+  renderLoginScreen();
+}
+
+function extractTokensFromHash() {
+  const hash = window.location.hash;
+  if (!hash || !hash.includes('access_token')) return null;
+  const params = new URLSearchParams(hash.slice(1));
+  const accessToken = params.get('access_token');
+  const refreshToken = params.get('refresh_token');
+  const expiresIn = parseInt(params.get('expires_in') || '3600', 10);
+  if (!accessToken || !refreshToken) return null;
+  history.replaceState(null, '', window.location.pathname + window.location.search);
+  return { accessToken, refreshToken, expiresAt: Date.now() + expiresIn * 1000 };
+}
+
+async function fetchUser() {
+  if (!authSession) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: {
+        'Authorization': `Bearer ${authSession.accessToken}`,
+        'apikey': SUPABASE_ANON_KEY,
+      },
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.id) return;
+    authSession.userId = data.id;
+    authSession.email = data.email || '';
+    saveAuthSession(authSession);
+  } catch { /* ignore */ }
+}
+
+async function refreshAccessToken() {
+  if (!authSession || !authSession.refreshToken) {
+    await clearAuthSession();
+    return false;
+  }
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ refresh_token: authSession.refreshToken }),
+    });
+    if (!res.ok) { await clearAuthSession(); return false; }
+    const data = await res.json();
+    if (!data.access_token || !data.refresh_token) { await clearAuthSession(); return false; }
+    authSession.accessToken = data.access_token;
+    authSession.refreshToken = data.refresh_token;
+    authSession.expiresAt = Date.now() + (data.expires_in || 3600) * 1000;
+    saveAuthSession(authSession);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function ensureValidToken() {
+  if (!authSession) return false;
+  if (authSession.expiresAt && authSession.expiresAt - Date.now() < 5 * 60 * 1000) {
+    return await refreshAccessToken();
+  }
+  return true;
+}
+
+async function sendMagicLink(email) {
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON_KEY,
+    },
+    body: JSON.stringify({ email, create_user: true }),
+  });
+  return res.ok;
+}
+
+function renderLoginScreen() {
+  const app = document.querySelector('main.app');
+  app.innerHTML = '';
+
+  const screen = el('div', { className: 'login-screen' });
+  const formArea = el('div', { className: 'login-form-area' });
+
+  formArea.appendChild(el('p', { className: 'login-subtitle', text: 'Sign in to sync across devices' }));
+
+  const emailInput = el('input', { type: 'email', placeholder: 'your@email.com', autocomplete: 'email' });
+  emailInput.setAttribute('aria-label', 'Email address');
+
+  const sendBtn = el('button', { className: 'btn-primary', text: 'Send magic link' });
+  const hint = el('p', { className: 'login-hint' });
+
+  emailInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendBtn.click(); });
+
+  sendBtn.addEventListener('click', async () => {
+    const email = emailInput.value.trim();
+    if (!email) { emailInput.focus(); return; }
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending...';
+    try {
+      const ok = await sendMagicLink(email);
+      if (ok) {
+        formArea.innerHTML = '';
+        const sentArea = el('div', { className: 'login-sent-area' });
+        sentArea.appendChild(el('p', { className: 'login-subtitle', text: 'Check your email' }));
+        sentArea.appendChild(el('p', { className: 'login-hint', text: `We sent a link to ${email}` }));
+        formArea.appendChild(sentArea);
+      } else {
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send magic link';
+        hint.textContent = 'Something went wrong. Try again.';
+      }
+    } catch {
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Send magic link';
+      hint.textContent = 'Something went wrong. Try again.';
+    }
+  });
+
+  formArea.append(emailInput, sendBtn, hint);
+  screen.appendChild(formArea);
+  app.appendChild(screen);
+}
+
+async function pullFromServer() {
+  if (!authSession || !authSession.userId) return;
+  if (syncStatus === 'pending' || syncStatus === 'syncing') return;
+  const valid = await ensureValidToken();
+  if (!valid) return;
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/user_data?user_id=eq.${authSession.userId}&select=items,updated_at`,
+      {
+        headers: {
+          'Authorization': `Bearer ${authSession.accessToken}`,
+          'apikey': SUPABASE_ANON_KEY,
+        },
+      }
+    );
+    if (!res.ok) return;
+    const rows = await res.json();
+    if (!rows || rows.length === 0) return;
+    const row = rows[0];
+    const serverUpdatedAt = new Date(row.updated_at).getTime();
+    if (serverUpdatedAt <= lastSyncedAt) return;
+    const serverItems = Array.isArray(row.items) ? row.items.map(validateItem).filter(Boolean) : [];
+    items = serverItems;
+    lastSyncedAt = serverUpdatedAt;
+    cleanOrphanDependencies();
+    saveItems(true); // don't push back what we just pulled
+    render();
+  } catch { /* silent fail */ }
+}
+
+async function pushToServer() {
+  if (!authSession || !authSession.userId) return;
+  syncStatus = 'syncing';
+  renderSyncIndicator();
+
+  const doRequest = async () => fetch(`${SUPABASE_URL}/rest/v1/user_data`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${authSession.accessToken}`,
+      'apikey': SUPABASE_ANON_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates',
+    },
+    body: JSON.stringify({
+      user_id: authSession.userId,
+      items: items,
+      updated_at: new Date().toISOString(),
+    }),
+  });
+
+  try {
+    let res = await doRequest();
+    if (res.status === 401) {
+      const refreshed = await ensureValidToken();
+      if (!refreshed) return;
+      res = await doRequest();
+    }
+    if (res.ok) {
+      syncStatus = 'synced';
+      lastSyncedAt = Date.now();
+      renderSyncIndicator();
+      setTimeout(() => {
+        if (syncStatus === 'synced') { syncStatus = 'idle'; renderSyncIndicator(); }
+      }, 3000);
+    } else {
+      syncStatus = 'error';
+      renderSyncIndicator();
+    }
+  } catch {
+    syncStatus = 'pending';
+    renderSyncIndicator();
+  }
+}
+
+function debouncedPush() {
+  clearTimeout(syncTimer);
+  syncStatus = 'pending';
+  renderSyncIndicator();
+  syncTimer = setTimeout(() => pushToServer(), 1500);
+}
+
+function renderSyncIndicator() {
+  const indicator = document.getElementById('sync-indicator');
+  if (!indicator) return;
+  indicator.className = `sync-dot ${syncStatus}`;
+  const labels = { idle: '', syncing: 'Syncing...', synced: 'Synced', error: 'Sync error', pending: 'Pending sync' };
+  indicator.setAttribute('aria-label', labels[syncStatus] || '');
+}
+
 // === Init ===
-function init() {
+async function init() {
+  authSession = loadAuthSession();
+  const hashTokens = extractTokensFromHash();
+  if (hashTokens) {
+    authSession = { ...hashTokens };
+    saveAuthSession(authSession);
+    await fetchUser();
+  } else if (authSession && !authSession.userId) {
+    // Session stored before userId was fetched — recover it
+    await fetchUser();
+    if (!authSession.userId) { authSession = null; try { localStorage.removeItem(AUTH_KEY); } catch { /* ok */ } }
+  }
+  if (!authSession) {
+    renderLoginScreen();
+    return;
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && authSession) pullFromServer();
+  });
+
   const { items: loadedItems, toast } = loadItems();
   items = loadedItems;
   cleanOrphanDependencies();
@@ -1662,6 +1952,8 @@ function init() {
   if (toast) {
     setTimeout(() => showToast(toast), 100);
   }
+
+  pullFromServer();
 }
 
-init();
+init().catch(console.error);
