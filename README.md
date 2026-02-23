@@ -14,12 +14,15 @@ Three files (`index.html`, `styles.css`, `app.js`). No build step. No node_modul
 - Catppuccin Mocha's 26-color palette (dark mode only, no apologies)
 - Mobile-first with 44px touch targets and safe-area support
 - Persists to `localStorage` with a versioned envelope and a backup copy
+- Optional cross-device sync via Supabase (magic link auth, no passwords)
 
 ### Tasks
 
 Tasks have three time states. "Due by" tasks surface 10 days before their deadline and show a countdown. "Open" tasks have no deadline but get a stale badge after 14 days without an update. "Recurring" tasks complete and immediately create the next instance.
 
 Status goes `active → waiting → done`. "Blocked" isn't a status — it's derived from unfinished dependencies. The only labels are `15min` and `browse`, both meant as execution hints, not categories.
+
+Tasks support subtasks (expand/collapse on the card), dependencies, and an optional activation date that controls when a task first surfaces.
 
 ### Events
 
@@ -29,18 +32,25 @@ Events have a date (all-day or timed), an optional location, and notes. The cale
 
 | View | What's in it |
 |------|--------------|
-| Calendar | Items on the selected day, week strip for navigation |
-| Active | Due-by tasks in the 10-day window |
-| Browse | Open tasks plus anything labeled `browse` or `15min` |
+| Calendar | Week strip + items on selected day. Agenda mode shows upcoming events grouped by date. |
+| Active | Due-by tasks in a configurable window (10 days / 30 days / all). Overdue and due-today get their own sections. |
+| Anytime | Open tasks plus anything labeled `browse` or `15min`. Sortable by label priority, A→Z, or newest. |
 | Recurring | Recurring tasks due today or earlier |
-| Done | Last 50 completed items (reopenable) |
-| All | Everything, with title search |
+| Done | Last 50 completed items (reopenable). Items auto-purge 90 days after completion. |
+| All | Everything, with title search, type filter (tasks / events / grouped), and sort (newest / A→Z / due date) |
 
 ### Other stuff
 
 - Ctrl+Z / Cmd+Z undoes the last action, up to 20 levels
-- Done items are automatically deleted after 90 days
 - Stale dependency references are cleaned up on load
+- View transitions between tabs (Chrome/Edge)
+- Sticky section headings with backdrop blur in Active view
+
+## Sync
+
+Sign in with a magic link to sync across devices. Your data lives in `localStorage` first — Supabase is the async remote copy. The app works fully offline; changes sync when you're back online (peach dot = pending, green = synced).
+
+Sign-in is optional. Hit "Use without sync" on the login screen to skip it.
 
 ## Run locally
 
@@ -48,7 +58,7 @@ Events have a date (all-day or timed), an optional location, and notes. The cale
 open index.html
 ```
 
-Or if you want hot reload:
+Or with hot reload:
 
 ```sh
 npx serve .
