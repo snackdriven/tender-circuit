@@ -715,6 +715,15 @@
     border-inline-start: 3px solid var(--ctp-overlay0);
   }
 
+  .task-card.overdue {
+    background: color-mix(in oklch, var(--ctp-red) 6%, var(--ctp-surface0));
+    border-inline-start-color: var(--ctp-red);
+  }
+
+  .task-card.waiting {
+    opacity: 0.65;
+  }
+
   .item-content {
     flex: 1;
     display: flex;
@@ -786,6 +795,12 @@
   .countdown.due-later {
     background: color-mix(in oklch, var(--ctp-green) 15%, transparent);
     color: var(--ctp-green);
+  }
+
+  .countdown.due-today {
+    background: var(--ctp-peach);
+    color: var(--ctp-crust);
+    font-weight: 700;
   }
 
   /* Status badges */
@@ -926,6 +941,14 @@
 
   .overdue-section {
     margin-block-end: var(--space-2xl);
+  }
+
+  .today-section {
+    margin-block-end: var(--space-2xl);
+  }
+
+  .today-heading {
+    color: var(--ctp-peach);
   }
 
   /* Toast */

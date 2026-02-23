@@ -79,7 +79,7 @@ function formatCountdown(dueDate) {
     const days = Math.round((todayMs - dueMs) / DAY_MS);
     return { text: days === 1 ? '1d overdue' : `${days}d overdue`, cls: 'overdue' };
   } else if (dueDate === today) {
-    return { text: 'Due today', cls: 'due-soon' };
+    return { text: 'Due today', cls: 'due-today' };
   } else {
     const [ty, tm, td] = today.split('-').map(Number);
     const [dy, dm, dd] = dueDate.split('-').map(Number);
@@ -926,9 +926,15 @@ function render() {
     content.appendChild(renderSearchBar());
   }
 
-  // For Active view, render both Overdue and Active sections
+  // For Active view, render Overdue / Due Today / Upcoming sections
   if (currentView === 'active') {
     const overdueItems = getViewItems('overdue');
+    const today = todayStr();
+    const activeItems = getViewItems('active');
+    const todayItems = activeItems.filter(i => i.dueDate === today);
+    const upcomingItems = activeItems.filter(i => i.dueDate !== today);
+    const hasAny = overdueItems.length > 0 || activeItems.length > 0;
+
     if (overdueItems.length > 0) {
       const section = el('section', { className: 'overdue-section' }, [
         el('h2', { className: 'section-heading overdue-heading', text: 'Overdue' }),
@@ -939,16 +945,27 @@ function render() {
       content.appendChild(section);
     }
 
-    const activeItems = getViewItems('active');
-    const heading = el('h2', { className: 'section-heading', text: overdueItems.length > 0 ? 'Active Window' : '' });
-    if (heading.textContent) content.appendChild(heading);
-
-    if (activeItems.length === 0 && overdueItems.length === 0) {
-      content.appendChild(renderEmptyState());
-    } else {
+    if (todayItems.length > 0) {
+      const section = el('section', { className: 'today-section' }, [
+        el('h2', { className: 'section-heading today-heading', text: 'Due today' }),
+      ]);
       const list = el('ul', { className: 'item-list' });
-      activeItems.forEach(item => list.appendChild(renderItemCard(item)));
+      todayItems.forEach(item => list.appendChild(renderItemCard(item)));
+      section.appendChild(list);
+      content.appendChild(section);
+    }
+
+    if (upcomingItems.length > 0) {
+      if (overdueItems.length > 0 || todayItems.length > 0) {
+        content.appendChild(el('h2', { className: 'section-heading', text: 'Upcoming' }));
+      }
+      const list = el('ul', { className: 'item-list' });
+      upcomingItems.forEach(item => list.appendChild(renderItemCard(item)));
       content.appendChild(list);
+    }
+
+    if (!hasAny) {
+      content.appendChild(renderEmptyState());
     }
   } else {
     if (currentView === 'calendar' && calendarMode === 'agenda') {
@@ -1007,7 +1024,7 @@ function renderViewNav() {
   const views = [
     { key: 'calendar', label: 'Calendar' },
     { key: 'active', label: 'Active' },
-    { key: 'browse', label: 'Browse' },
+    { key: 'browse', label: 'Anytime' },
     { key: 'recurring', label: 'Recurring' },
     { key: 'done', label: 'Done' },
     { key: 'all', label: 'All' },
@@ -1428,7 +1445,8 @@ function renderEventCard(event, opts = {}) {
 }
 
 function renderTaskCard(task, opts = {}) {
-  const card = el('li', { className: `item-card task-card${task.status === 'done' ? ' completed' : ''}`, dataset: { id: task.id, type: 'task' } });
+  const isOverdueTask = task.dueDate && task.status !== 'done' && task.dueDate < todayStr();
+  const card = el('li', { className: `item-card task-card${task.status === 'done' ? ' completed' : ''}${isOverdueTask ? ' overdue' : ''}${task.status === 'waiting' ? ' waiting' : ''}`, dataset: { id: task.id, type: 'task' } });
 
   const blocked = isBlocked(task);
   const completable = canComplete(task);
@@ -1451,12 +1469,8 @@ function renderTaskCard(task, opts = {}) {
     el('span', { className: 'item-title', text: task.title }),
   ]);
 
-  // Meta: labels, countdown, badges
+  // Meta: countdown first (urgency), labels, subtasks, actionability badges, stale
   const meta = el('div', { className: 'item-meta' });
-
-  (task.labels || []).forEach(l => {
-    meta.appendChild(el('span', { className: 'label-chip label-badge', text: l, ariaLabel: `Label: ${l}` }));
-  });
 
   if (task.dueDate && task.status !== 'done') {
     const countdown = formatCountdown(task.dueDate);
@@ -1464,6 +1478,10 @@ function renderTaskCard(task, opts = {}) {
       meta.appendChild(el('span', { className: `countdown ${countdown.cls}`, text: countdown.text }));
     }
   }
+
+  (task.labels || []).forEach(l => {
+    meta.appendChild(el('span', { className: 'label-chip label-badge', text: l, ariaLabel: `Label: ${l}` }));
+  });
 
   if (task.subtasks && task.subtasks.length > 0) {
     const done = task.subtasks.filter(s => s.done).length;
@@ -1483,12 +1501,12 @@ function renderTaskCard(task, opts = {}) {
     meta.appendChild(expandBtn);
   }
 
-  if (task.status === 'waiting') {
-    meta.appendChild(el('span', { className: 'badge waiting-badge', text: 'waiting', ariaLabel: 'Status: waiting' }));
-  }
-
   if (blocked) {
     meta.appendChild(el('span', { className: 'badge blocked-badge', text: 'blocked', ariaLabel: 'Blocked by dependencies' }));
+  }
+
+  if (task.status === 'waiting') {
+    meta.appendChild(el('span', { className: 'badge waiting-badge', text: 'waiting', ariaLabel: 'Status: waiting' }));
   }
 
   if (isStale(task)) {
@@ -1771,7 +1789,7 @@ function renderEventEditForm(event) {
 function renderEmptyState() {
   const messages = {
     calendar: 'Nothing on this day',
-    active: 'No tasks in your active window',
+    active: 'All clear — nothing due in the next 10 days',
     browse: 'No open tasks to browse',
     recurring: 'No recurring tasks due',
     done: 'No completed tasks',
