@@ -772,6 +772,8 @@ function requestDelete(id) {
   const text = document.getElementById('delete-dialog-text');
   const preview = item.title.length > 60 ? item.title.slice(0, 60) + '...' : item.title;
   text.textContent = `"${preview}"`;
+  const mainEl = document.querySelector('main.app');
+  if (mainEl) mainEl.inert = true;
   dialog.showModal();
 }
 
@@ -1017,6 +1019,11 @@ function render() {
   renderSyncIndicator();
 }
 
+function renderWithTransition() {
+  if (!document.startViewTransition) { render(); return; }
+  document.startViewTransition(() => render());
+}
+
 function renderViewNav() {
   const nav = document.getElementById('view-nav');
   nav.innerHTML = '';
@@ -1044,7 +1051,7 @@ function renderViewNav() {
     btn.addEventListener('click', () => {
       currentView = v.key;
       editingId = null;
-      render();
+      renderWithTransition();
     });
     nav.appendChild(btn);
   });
@@ -1823,9 +1830,14 @@ function renderEmptyState() {
     done: 'No completed tasks',
     all: searchQuery ? 'No items match your search' : 'No items yet',
   };
-  return el('div', { className: 'empty-state' }, [
-    el('p', { text: messages[currentView] || 'Nothing here' }),
-  ]);
+  const icon = document.createElement('span');
+  icon.className = 'empty-state-icon';
+  icon.setAttribute('aria-hidden', 'true');
+  icon.innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>';
+  const div = el('div', { className: 'empty-state' });
+  div.appendChild(icon);
+  div.appendChild(el('p', { text: messages[currentView] || 'Nothing here' }));
+  return div;
 }
 
 // === Auth & Sync ===
@@ -2107,6 +2119,10 @@ async function init() {
   document.getElementById('delete-dialog-confirm').addEventListener('click', confirmDelete);
   document.getElementById('delete-dialog-cancel').addEventListener('click', cancelDelete);
   document.getElementById('delete-dialog').addEventListener('cancel', () => { pendingDeleteId = null; });
+  document.getElementById('delete-dialog').addEventListener('close', () => {
+    const mainEl = document.querySelector('main.app');
+    if (mainEl) mainEl.inert = false;
+  });
 
   // Ctrl+Z / Cmd+Z for undo
   document.addEventListener('keydown', e => {

@@ -61,6 +61,8 @@
 
     /* Touch target minimum */
     --touch-min: 44px;
+
+    color-scheme: dark;
   }
 }
 
@@ -91,6 +93,7 @@
     inline-size: 100%;
     max-inline-size: 32rem;
     padding: var(--space-2xl) var(--space-md) env(safe-area-inset-bottom, var(--space-2xl));
+    overscroll-behavior-y: contain;
     display: flex;
     flex-direction: column;
     gap: var(--space-xl);
@@ -134,7 +137,6 @@
     gap: var(--space-xs);
     overflow-x: auto;
     scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
     background: var(--ctp-mantle);
     padding: var(--space-xs);
     border-radius: var(--radius-lg);
@@ -630,6 +632,7 @@
   .week-day-num {
     font-size: 0.9rem;
     font-weight: 600;
+    font-variant-numeric: tabular-nums;
   }
 
   .week-today-btn {
@@ -697,6 +700,14 @@
     & > * {
       animation: card-in 0.16s ease-out both;
     }
+
+    & > *:nth-child(2)  { animation-delay: 30ms; }
+    & > *:nth-child(3)  { animation-delay: 60ms; }
+    & > *:nth-child(4)  { animation-delay: 90ms; }
+    & > *:nth-child(5)  { animation-delay: 120ms; }
+    & > *:nth-child(6)  { animation-delay: 150ms; }
+    & > *:nth-child(7)  { animation-delay: 180ms; }
+    & > *:nth-child(8)  { animation-delay: 210ms; }
   }
 
   @keyframes card-in {
@@ -712,7 +723,7 @@
     padding: var(--space-lg) var(--space-lg);
     background: var(--ctp-surface0);
     border-radius: var(--radius-lg);
-    transition: background 0.2s, opacity 0.2s;
+    transition: background 0.2s, opacity 0.2s, transform 0.1s;
 
     &.completed {
       opacity: 0.55;
@@ -726,6 +737,10 @@
     &.editing {
       flex-wrap: wrap;
       padding: var(--space-sm);
+    }
+
+    &:active {
+      background: color-mix(in oklch, var(--ctp-surface0), var(--ctp-surface1) 40%);
     }
   }
 
@@ -908,6 +923,11 @@
     & input:disabled + .checkmark {
       opacity: 0.4;
     }
+
+    & input:focus-visible + .checkmark {
+      outline: 2px solid var(--ctp-mauve);
+      outline-offset: 2px;
+    }
   }
 
   /* Item actions */
@@ -954,7 +974,13 @@
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--ctp-subtext0);
-    padding-block-end: var(--space-md);
+    padding-block: var(--space-sm) var(--space-md);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: color-mix(in oklch, var(--ctp-base) 88%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
   .overdue-heading {
@@ -1051,6 +1077,13 @@
 
     &::backdrop {
       background: color-mix(in oklch, var(--ctp-crust) 60%, transparent);
+      transition: background 0.25s;
+    }
+  }
+
+  @starting-style {
+    .confirm-dialog::backdrop {
+      background: transparent;
     }
   }
 
@@ -1115,19 +1148,17 @@
     padding: var(--space-4xl) var(--space-lg);
     color: var(--ctp-overlay0);
 
-    &::before {
-      content: '∅';
-      display: block;
-      font-size: 2rem;
-      opacity: 0.4;
-      margin-block-end: var(--space-md);
-      line-height: 1;
-    }
-
     & p {
       font-size: 0.95rem;
-      text-wrap: balance;
+      text-wrap: pretty;
     }
+  }
+
+  .empty-state-icon {
+    display: block;
+    opacity: 0.35;
+    margin-block-end: var(--space-md);
+    line-height: 1;
   }
 
   /* Focus outlines for keyboard navigation */
