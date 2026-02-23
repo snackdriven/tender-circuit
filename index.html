@@ -1780,10 +1780,12 @@
         }
 
         let metaHtml = '';
-        const hasMeta = todo.category !== 'general' || countdown;
+        const isDefaultGeneral = todo.category === 'general' && cat.label === DEFAULT_CATEGORIES.general.label;
+        const showCategoryBadge = !isDefaultGeneral;
+        const hasMeta = showCategoryBadge || countdown;
         if (hasMeta) {
           metaHtml = '<div class="todo-meta">';
-          if (todo.category !== 'general') {
+          if (showCategoryBadge) {
             metaHtml += `<span class="category-badge" style="--badge-color: ${cat.color}"><span class="category-dot"></span>${escapeHtml(cat.label)}</span>`;
           }
           if (countdown) {
