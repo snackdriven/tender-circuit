@@ -14,6 +14,7 @@ const PURGE_DAYS = 90;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
 const AUTH_KEY = 'tc-auth';
+const LOCAL_ONLY_KEY = 'tc-local-only';
 const SUPABASE_URL = 'https://pynmkrcbkcfxifnztnrn.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_8VEm7zR0vqKjOZRwH6jimw_qIWt-RPp';
 
@@ -482,7 +483,8 @@ let lastSyncedAt = 0;
 let calendarMode = 'day'; // 'day' | 'agenda'
 let activeViewWindow = ACTIVE_WINDOW_DAYS; // days ahead; null = no limit
 let allSortOrder = 'newest'; // 'newest' | 'alpha' | 'due'
-let allTypeFilter = 'all';  // 'all' | 'task' | 'event'
+let allTypeFilter = 'all';  // 'all' | 'task' | 'event' | 'grouped'
+let browseSortOrder = '15min'; // '15min' | 'alpha' | 'newest'
 
 // === Composable Filter Predicates ===
 const allPreds = (...preds) => (item) => preds.every(p => p(item));
@@ -556,15 +558,21 @@ function sortForView(arr, viewName, today) {
       sorted.sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''));
       break;
     case 'browse':
-      sorted.sort((a, b) => {
-        const a15 = (a.labels || []).includes('15min') ? 0 : 1;
-        const b15 = (b.labels || []).includes('15min') ? 0 : 1;
-        if (a15 !== b15) return a15 - b15;
-        const ad = a.dueDate || '\uffff';
-        const bd = b.dueDate || '\uffff';
-        if (ad !== bd) return ad.localeCompare(bd);
-        return a.createdAt - b.createdAt;
-      });
+      if (browseSortOrder === 'alpha') {
+        sorted.sort((a, b) => a.title.localeCompare(b.title));
+      } else if (browseSortOrder === 'newest') {
+        sorted.sort((a, b) => b.createdAt - a.createdAt);
+      } else {
+        sorted.sort((a, b) => {
+          const a15 = (a.labels || []).includes('15min') ? 0 : 1;
+          const b15 = (b.labels || []).includes('15min') ? 0 : 1;
+          if (a15 !== b15) return a15 - b15;
+          const ad = a.dueDate || '\uffff';
+          const bd = b.dueDate || '\uffff';
+          if (ad !== bd) return ad.localeCompare(bd);
+          return a.createdAt - b.createdAt;
+        });
+      }
       break;
     case 'recurring':
       sorted.sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || '') || a.title.localeCompare(b.title));
@@ -938,10 +946,16 @@ function render() {
     if (calendarMode === 'day') content.appendChild(renderWeekStrip());
   }
 
+  if (currentView === 'browse') {
+    content.appendChild(renderBrowseSortToggle());
+  }
+
   if (currentView === 'all') {
     content.appendChild(renderSearchBar());
-    content.appendChild(renderAllTypeFilter());
-    content.appendChild(renderAllSortToggle());
+    const allControlsRow = el('div', { className: 'all-controls-row' });
+    allControlsRow.appendChild(renderAllTypeFilter());
+    allControlsRow.appendChild(renderAllSortToggle());
+    content.appendChild(allControlsRow);
   }
 
   // For Active view, render Overdue / Due Today / Upcoming sections
@@ -1022,6 +1036,13 @@ function render() {
         const list = el('ul', { className: 'item-list' });
         viewItems.forEach(item => list.appendChild(renderItemCard(item, { readOnly })));
         content.appendChild(list);
+        if (currentView === 'done') {
+          const allDoneCount = items.filter(isDone).length;
+          const noteText = allDoneCount > 50
+            ? `Showing 50 of ${allDoneCount} · items auto-purge 90 days after completion`
+            : 'Items auto-purge 90 days after completion';
+          content.appendChild(el('p', { className: 'done-cap-note', text: noteText }));
+        }
       }
     }
   }
@@ -1081,12 +1102,22 @@ function renderViewNav() {
   views.forEach(v => {
     const btn = el('button', {
       className: `view-tab${v.key === currentView ? ' active' : ''}`,
-      text: v.label,
       role: 'tab',
       ariaLabel: v.label,
     });
     btn.setAttribute('aria-selected', v.key === currentView ? 'true' : 'false');
     btn.dataset.view = v.key;
+    btn.appendChild(document.createTextNode(v.label));
+
+    let count = 0;
+    if (v.key === 'active') count = getViewItems('overdue').length + getViewItems('active').length;
+    else if (v.key === 'recurring') count = getViewItems('recurring').length;
+    if (count > 0) {
+      const badge = el('span', { className: 'tab-count-badge', text: String(count) });
+      badge.setAttribute('aria-label', `${count} items`);
+      btn.appendChild(badge);
+    }
+
     btn.addEventListener('click', () => {
       currentView = v.key;
       editingId = null;
@@ -1334,6 +1365,25 @@ function renderAllTypeFilter() {
   return toggle;
 }
 
+// === Browse Sort Toggle ===
+function renderBrowseSortToggle() {
+  const toggle = el('div', { className: 'calendar-mode-toggle' });
+  const options = [
+    { label: '15min first', value: '15min'  },
+    { label: 'A→Z',         value: 'alpha'  },
+    { label: 'Newest',      value: 'newest' },
+  ];
+  options.forEach(({ label, value }) => {
+    const btn = el('button', {
+      className: `calendar-mode-btn${browseSortOrder === value ? ' active' : ''}`,
+      text: label,
+    });
+    btn.addEventListener('click', () => { browseSortOrder = value; render(); });
+    toggle.appendChild(btn);
+  });
+  return toggle;
+}
+
 // === All View Sort Toggle ===
 function renderAllSortToggle() {
   const toggle = el('div', { className: 'calendar-mode-toggle' });
@@ -1355,6 +1405,8 @@ function renderAllSortToggle() {
 
 // === Active Window Toggle ===
 function renderActiveWindowToggle() {
+  const wrapper = el('div', { className: 'window-toggle-row' });
+  wrapper.appendChild(el('span', { className: 'window-toggle-label', text: 'Due within:' }));
   const toggle = el('div', { className: 'calendar-mode-toggle' });
   const options = [
     { label: '10 days', value: 10 },
@@ -1369,7 +1421,8 @@ function renderActiveWindowToggle() {
     btn.addEventListener('click', () => { activeViewWindow = value; render(); });
     toggle.appendChild(btn);
   });
-  return toggle;
+  wrapper.appendChild(toggle);
+  return wrapper;
 }
 
 // === Calendar Mode Toggle & Agenda ===
@@ -1404,6 +1457,7 @@ function renderAgendaView() {
   }
 
   const container = el('div', { className: 'agenda-view' });
+  container.appendChild(el('p', { className: 'agenda-events-note', text: 'Events only — see Active for tasks' }));
   for (const [date, events] of groups) {
     const [y, m, d] = date.split('-').map(Number);
     const isToday = date === today;
@@ -1569,7 +1623,9 @@ function renderTaskCard(task, opts = {}) {
   if (!isDoneView && !opts.readOnly) {
     const checkLabel = el('label', { className: 'checkbox' });
     const checkInput = el('input', { type: 'checkbox', checked: task.status === 'done' });
-    checkInput.setAttribute('aria-label', `Mark ${task.title} as ${task.status === 'done' ? 'active' : 'done'}`);
+    const isRecurringType = task.timeState === 'recurring';
+    const doneLabel = isRecurringType ? 'Complete and schedule next occurrence' : 'done';
+    checkInput.setAttribute('aria-label', `Mark ${task.title} as ${task.status === 'done' ? 'active' : doneLabel}`);
     if (!completable && task.status !== 'done') checkInput.disabled = true;
     checkInput.addEventListener('change', () => toggleItem(task.id));
     const checkmark = el('span', { className: 'checkmark' });
@@ -1624,6 +1680,10 @@ function renderTaskCard(task, opts = {}) {
 
   if (isStale(task)) {
     meta.appendChild(el('span', { className: 'badge stale-badge', text: 'stale', ariaLabel: 'Stale: not updated in 14+ days' }));
+  }
+
+  if (task.recurrenceRule && task.timeState === 'recurring') {
+    meta.appendChild(el('span', { className: 'badge recurrence-badge', text: task.recurrenceRule, ariaLabel: `Repeats ${task.recurrenceRule}` }));
   }
 
   if (meta.childNodes.length > 0) content.appendChild(meta);
@@ -2064,16 +2124,22 @@ function renderLoginScreen() {
       } else {
         sendBtn.disabled = false;
         sendBtn.textContent = 'Send magic link';
-        hint.textContent = 'Something went wrong. Try again.';
+        hint.textContent = 'Check your inbox — you may already have a link. (3 per hour limit)';
       }
     } catch {
       sendBtn.disabled = false;
       sendBtn.textContent = 'Send magic link';
-      hint.textContent = 'Something went wrong. Try again.';
+      hint.textContent = 'Check your inbox — you may already have a link. (3 per hour limit)';
     }
   });
 
-  formArea.append(emailInput, sendBtn, hint);
+  const skipBtn = el('button', { className: 'btn-link', text: 'Use without sync' });
+  skipBtn.addEventListener('click', () => {
+    localStorage.setItem(LOCAL_ONLY_KEY, '1');
+    startApp();
+  });
+
+  formArea.append(emailInput, sendBtn, hint, skipBtn);
   screen.appendChild(formArea);
   app.appendChild(screen);
 }
@@ -2167,22 +2233,25 @@ function renderSyncIndicator() {
   indicator.setAttribute('aria-label', labels[syncStatus] || '');
 }
 
-// === Init ===
-async function init() {
-  authSession = loadAuthSession();
-  const hashTokens = extractTokensFromHash();
-  if (hashTokens) {
-    authSession = { ...hashTokens };
-    saveAuthSession(authSession);
-    await fetchUser();
-  } else if (authSession && !authSession.userId) {
-    // Session stored before userId was fetched — recover it
-    await fetchUser();
-    if (!authSession.userId) { authSession = null; try { localStorage.removeItem(AUTH_KEY); } catch { /* ok */ } }
-  }
-  if (!authSession) {
-    renderLoginScreen();
-    return;
+// === App Startup (shared between authed + local-only paths) ===
+function startApp() {
+  // Restore main app structure if login screen replaced it
+  const app = document.querySelector('main.app');
+  if (!document.getElementById('view-nav')) {
+    app.innerHTML = `
+      <header>
+        <h1>Planner</h1>
+        <div class="header-end">
+          <span id="sync-indicator" class="sync-dot" role="status" aria-label=""></span>
+          <span class="task-count" id="task-count" role="status" aria-live="polite"></span>
+          <span id="header-actions"></span>
+        </div>
+      </header>
+      <nav class="view-nav" id="view-nav" role="tablist" aria-label="Views"></nav>
+      <div class="create-toggle" id="create-toggle"></div>
+      <div id="create-form-container"></div>
+      <div id="content" role="tabpanel"></div>
+    `;
   }
 
   document.addEventListener('visibilitychange', () => {
@@ -2222,7 +2291,30 @@ async function init() {
     setTimeout(() => showToast(toast), 100);
   }
 
-  pullFromServer();
+  if (authSession) pullFromServer();
+}
+
+// === Init ===
+async function init() {
+  authSession = loadAuthSession();
+  const hashTokens = extractTokensFromHash();
+  if (hashTokens) {
+    authSession = { ...hashTokens };
+    saveAuthSession(authSession);
+    await fetchUser();
+  } else if (authSession && !authSession.userId) {
+    // Session stored before userId was fetched — recover it
+    await fetchUser();
+    if (!authSession.userId) { authSession = null; try { localStorage.removeItem(AUTH_KEY); } catch { /* ok */ } }
+  }
+
+  const isLocalOnly = localStorage.getItem(LOCAL_ONLY_KEY) === '1';
+  if (!authSession && !isLocalOnly) {
+    renderLoginScreen();
+    return;
+  }
+
+  startApp();
 }
 
 init().catch(console.error);

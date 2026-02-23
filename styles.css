@@ -558,6 +558,9 @@
     display: flex;
     align-items: center;
     gap: var(--space-xs);
+    background: var(--ctp-mantle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xs);
   }
 
   .week-nav {
@@ -786,7 +789,7 @@
 
   .event-time {
     font-family: var(--font-mono);
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     font-weight: 500;
     color: var(--ctp-peach);
   }
@@ -804,8 +807,9 @@
     font-size: 0.75rem;
     color: var(--ctp-overlay1);
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     max-inline-size: 100%;
   }
 
@@ -855,12 +859,12 @@
   }
 
   .blocked-badge {
-    background: color-mix(in oklch, var(--ctp-red) 15%, transparent);
-    color: var(--ctp-red);
+    background: color-mix(in oklch, var(--ctp-maroon) 18%, transparent);
+    color: var(--ctp-maroon);
   }
 
   .stale-badge {
-    background: color-mix(in oklch, var(--ctp-overlay2) 20%, transparent);
+    background: var(--ctp-surface1);
     color: var(--ctp-overlay2);
   }
 
@@ -1244,6 +1248,100 @@
     }
   }
 
+  /* On touch devices: show actions at low opacity as an affordance */
+  @media (hover: none) {
+    .item-card.reveal-on-interact:not(.selected) .item-actions {
+      opacity: 0.2;
+    }
+  }
+
+  /* Tab count badge */
+  .tab-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 18px;
+    padding-inline: var(--space-xs);
+    block-size: 18px;
+    border-radius: var(--radius-full);
+    background: color-mix(in oklch, var(--ctp-mauve) 20%, transparent);
+    color: var(--ctp-mauve);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 600;
+    margin-inline-start: var(--space-xs);
+    line-height: 1;
+  }
+
+  .view-tab.active .tab-count-badge {
+    background: color-mix(in oklch, var(--ctp-mauve) 25%, transparent);
+  }
+
+  /* Window toggle row (Active view) */
+  .window-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+  }
+
+  .window-toggle-label {
+    font-size: 0.8rem;
+    color: var(--ctp-overlay1);
+    white-space: nowrap;
+  }
+
+  /* All view: combined controls row */
+  .all-controls-row {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  /* Agenda events-only note */
+  .agenda-events-note {
+    font-size: 0.75rem;
+    color: var(--ctp-overlay0);
+    padding-inline-start: var(--space-xs);
+    margin-block-end: var(--space-sm);
+  }
+
+  /* Done view cap note */
+  .done-cap-note {
+    font-size: 0.75rem;
+    color: var(--ctp-overlay0);
+    text-align: center;
+    padding-block: var(--space-lg);
+  }
+
+  /* Recurrence rule badge */
+  .recurrence-badge {
+    background: color-mix(in oklch, var(--ctp-lavender) 15%, transparent);
+    color: var(--ctp-lavender);
+  }
+
+  /* "Use without sync" ghost link button on login screen */
+  .btn-link {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--ctp-overlay1);
+    font-family: inherit;
+    font-size: 0.85rem;
+    padding: var(--space-xs) 0;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    align-self: center;
+    min-block-size: var(--touch-min);
+    transition: color 0.2s;
+
+    &:hover {
+      color: var(--ctp-subtext0);
+    }
+  }
+
   /* Login screen */
   .login-screen {
     display: flex;
@@ -1336,6 +1434,7 @@
     font-size: 0.75rem;
     padding: var(--space-xs) var(--space-sm);
     border-radius: var(--radius-sm);
+    min-block-size: var(--touch-min);
     transition: color 0.2s, background 0.2s;
 
     &:hover {
