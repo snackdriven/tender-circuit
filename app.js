@@ -474,6 +474,7 @@ let undoStack = [];
 let toastTimer = null;
 let pendingDeleteId = null;
 let searchQuery = '';
+const expandedIds = new Set(); // task IDs with subtask list expanded
 let authSession = null;   // { accessToken, refreshToken, expiresAt, userId, email }
 let syncStatus = 'idle';  // 'idle' | 'syncing' | 'synced' | 'error' | 'pending'
 let syncTimer = null;
@@ -691,6 +692,18 @@ function createTask(formData) {
 }
 
 // === CRUD: Toggle / Complete ===
+function toggleSubtask(taskId, subtaskId) {
+  const task = items.find(i => i.id === taskId);
+  if (!task) return;
+  const subtask = (task.subtasks || []).find(s => s.id === subtaskId);
+  if (!subtask) return;
+  mutate('Subtask toggled', () => {
+    subtask.done = !subtask.done;
+    task.updatedAt = Date.now();
+    return true;
+  });
+}
+
 function toggleItem(id) {
   const item = items.find(i => i.id === id);
   if (!item || item.type !== 'task') return;
@@ -1374,7 +1387,20 @@ function renderTaskCard(task, opts = {}) {
 
   if (task.subtasks && task.subtasks.length > 0) {
     const done = task.subtasks.filter(s => s.done).length;
-    meta.appendChild(el('span', { className: 'subtask-progress', text: `${done}/${task.subtasks.length} subtasks`, ariaLabel: `${done} of ${task.subtasks.length} subtasks complete` }));
+    const isExpanded = expandedIds.has(task.id);
+    const expandBtn = el('button', {
+      className: `subtask-toggle${isExpanded ? ' expanded' : ''}`,
+      text: `${done}/${task.subtasks.length} subtasks`,
+      type: 'button',
+      ariaLabel: `${isExpanded ? 'Collapse' : 'Expand'} subtasks`,
+    });
+    expandBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      if (expandedIds.has(task.id)) expandedIds.delete(task.id);
+      else expandedIds.add(task.id);
+      render();
+    });
+    meta.appendChild(expandBtn);
   }
 
   if (task.status === 'waiting') {
@@ -1390,6 +1416,20 @@ function renderTaskCard(task, opts = {}) {
   }
 
   if (meta.childNodes.length > 0) content.appendChild(meta);
+
+  if (expandedIds.has(task.id) && task.subtasks && task.subtasks.length > 0) {
+    const subtaskList = el('div', { className: 'card-subtask-list' });
+    task.subtasks.forEach(s => {
+      const entry = el('div', { className: `card-subtask-entry${s.done ? ' done' : ''}` });
+      const chk = el('input', { type: 'checkbox', checked: s.done });
+      chk.setAttribute('aria-label', s.text);
+      chk.addEventListener('change', () => toggleSubtask(task.id, s.id));
+      entry.append(chk, el('span', { className: 'subtask-text', text: s.text }));
+      subtaskList.appendChild(entry);
+    });
+    content.appendChild(subtaskList);
+  }
+
   card.appendChild(content);
 
   // Actions

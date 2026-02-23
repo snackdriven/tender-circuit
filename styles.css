@@ -473,6 +473,61 @@
     color: var(--ctp-overlay1);
   }
 
+  .subtask-toggle {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--ctp-overlay1);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 1px var(--space-sm);
+    border-radius: var(--radius-full);
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    transition: background 0.15s, color 0.15s;
+
+    &::after { content: '▸'; font-size: 0.6rem; }
+    &.expanded::after { content: '▾'; }
+
+    &:hover {
+      color: var(--ctp-subtext0);
+      background: var(--ctp-surface1);
+    }
+  }
+
+  .card-subtask-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding-block-start: var(--space-sm);
+    margin-block-start: var(--space-xs);
+    border-block-start: 1px solid var(--ctp-surface1);
+  }
+
+  .card-subtask-entry {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 3px var(--space-xs);
+    border-radius: var(--radius-sm);
+
+    & input[type="checkbox"] {
+      cursor: pointer;
+      accent-color: var(--ctp-green);
+      flex-shrink: 0;
+    }
+
+    &.done .subtask-text {
+      text-decoration: line-through;
+      color: var(--ctp-overlay0);
+    }
+
+    &:hover {
+      background: var(--ctp-surface1);
+    }
+  }
+
   /* Week strip (Calendar) */
   .week-strip {
     display: flex;
