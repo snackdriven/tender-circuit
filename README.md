@@ -10,24 +10,20 @@ A task and event planner with zero dependencies and a whole lot of [Catppuccin M
 
 Three files (`index.html`, `styles.css`, `app.js`). No build step. No node_modules. No nonsense. Just open it.
 
-- **Inter** for the UI, **DM Mono** for the numbers
-- Catppuccin Mocha — 26 hand-picked colors so your eyes can relax
+- Inter for the UI, DM Mono for the numbers
+- Catppuccin Mocha's 26-color palette (dark mode only, no apologies)
 - Mobile-first with 44px touch targets and safe-area support
-- Survives a refresh — versioned `localStorage` with a backup copy
+- Persists to `localStorage` with a versioned envelope and a backup copy
 
 ### Tasks
 
-Tasks have three time states:
+Tasks have three time states. "Due by" tasks surface 10 days before their deadline and show a countdown. "Open" tasks have no deadline but get a stale badge after 14 days without an update. "Recurring" tasks complete and immediately create the next instance.
 
-- **Due by** — surfaces 10 days before the due date, shows a countdown badge
-- **Open** — no deadline; gets a stale badge if untouched for 14 days
-- **Recurring** — completes and spawns the next instance atomically
-
-Status flows through `active → waiting → done`. Blocked is derived from dependencies, not stored. Labels are `15min` and `browse` — execution hints, not categories.
+Status goes `active → waiting → done`. "Blocked" isn't a status — it's derived from unfinished dependencies. The only labels are `15min` and `browse`, both meant as execution hints, not categories.
 
 ### Events
 
-Events have a date (all-day or timed), location, and notes. The calendar view shows events and tasks together on a weekly strip.
+Events have a date (all-day or timed), an optional location, and notes. The calendar view shows events and tasks together on a weekly strip.
 
 ### Views
 
@@ -35,16 +31,16 @@ Events have a date (all-day or timed), location, and notes. The calendar view sh
 |------|--------------|
 | Calendar | Items on the selected day, week strip for navigation |
 | Active | Due-by tasks in the 10-day window |
-| Browse | Open tasks and anything labeled `browse` or `15min` |
+| Browse | Open tasks plus anything labeled `browse` or `15min` |
 | Recurring | Recurring tasks due today or earlier |
-| Done | Last 50 completed items — reopenable |
+| Done | Last 50 completed items (reopenable) |
 | All | Everything, with title search |
 
 ### Other stuff
 
-- Ctrl+Z / Cmd+Z undoes the last action (up to 20 levels)
-- Done items auto-purge after 90 days
-- Orphan dependency refs cleaned on load
+- Ctrl+Z / Cmd+Z undoes the last action, up to 20 levels
+- Done items are automatically deleted after 90 days
+- Stale dependency references are cleaned up on load
 
 ## Run locally
 
@@ -52,7 +48,7 @@ Events have a date (all-day or timed), location, and notes. The calendar view sh
 open index.html
 ```
 
-That's it. Or if you want hot reload:
+Or if you want hot reload:
 
 ```sh
 npx serve .
