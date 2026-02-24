@@ -2113,12 +2113,14 @@ async function generateCodeChallenge(verifier) {
 }
 
 function getRedirectUrl() {
-  return window.location.origin + window.location.pathname;
+  const base = window.location.origin + window.location.pathname;
+  // Trailing slash must match the Supabase Redirect URL exactly
+  return base.endsWith('/') ? base : base + '/';
 }
 
 async function sendMagicLink(email) {
   const redirectTo = getRedirectUrl();
-  const body = { email, create_user: true, redirect_to: redirectTo };
+  const body = { email, create_user: true };
 
   // Use PKCE if crypto.subtle is available (requires secure context)
   if (typeof crypto !== 'undefined' && crypto.subtle) {
@@ -2135,7 +2137,9 @@ async function sendMagicLink(email) {
     console.warn('[auth] crypto.subtle unavailable (non-HTTPS?), using implicit flow');
   }
 
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
+  // redirect_to must be a query param, not in the body — Supabase ignores it in the body
+  const otpUrl = `${SUPABASE_URL}/auth/v1/otp?redirect_to=${encodeURIComponent(redirectTo)}`;
+  const res = await fetch(otpUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
