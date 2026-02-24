@@ -1994,8 +1994,17 @@ function extractTokensFromHash() {
   const refreshToken = params.get('refresh_token');
   const expiresIn = parseInt(params.get('expires_in') || '3600', 10);
   if (!accessToken || !refreshToken) return null;
-  history.replaceState(null, '', window.location.pathname + window.location.search);
+  history.replaceState(null, '', window.location.pathname);
   return { accessToken, refreshToken, expiresAt: Date.now() + expiresIn * 1000 };
+}
+
+function extractRedirectError() {
+  const params = new URLSearchParams(window.location.search);
+  const error = params.get('error') || params.get('error_code');
+  const desc = params.get('error_description');
+  if (!error) return null;
+  history.replaceState(null, '', window.location.pathname);
+  return desc ? `${error}: ${desc}` : error;
 }
 
 async function exchangeCodeForTokens() {
@@ -2003,7 +2012,11 @@ async function exchangeCodeForTokens() {
   const code = params.get('code');
   if (!code) return null;
   const codeVerifier = localStorage.getItem(PKCE_VERIFIER_KEY);
-  if (!codeVerifier) return null;
+  if (!codeVerifier) {
+    console.warn('[auth] PKCE code found in URL but no code_verifier in storage — link may have opened in a different browser');
+    history.replaceState(null, '', window.location.pathname);
+    return null;
+  }
   try { localStorage.removeItem(PKCE_VERIFIER_KEY); } catch { /* skip */ }
   history.replaceState(null, '', window.location.pathname);
   try {
@@ -2015,7 +2028,11 @@ async function exchangeCodeForTokens() {
       },
       body: JSON.stringify({ auth_code: code, code_verifier: codeVerifier }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      console.error('[auth] PKCE token exchange failed:', res.status, body);
+      return null;
+    }
     const data = await res.json();
     if (!data.access_token || !data.refresh_token) return null;
     return {
@@ -2023,7 +2040,8 @@ async function exchangeCodeForTokens() {
       refreshToken: data.refresh_token,
       expiresAt: Date.now() + (data.expires_in || 3600) * 1000,
     };
-  } catch {
+  } catch (err) {
+    console.error('[auth] PKCE token exchange error:', err);
     return null;
   }
 }
@@ -2094,31 +2112,46 @@ async function generateCodeChallenge(verifier) {
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
+function getRedirectUrl() {
+  return window.location.origin + window.location.pathname;
+}
+
 async function sendMagicLink(email) {
-  const codeVerifier = generateCodeVerifier();
-  const codeChallenge = await generateCodeChallenge(codeVerifier);
-  try { localStorage.setItem(PKCE_VERIFIER_KEY, codeVerifier); } catch { /* skip */ }
+  const redirectTo = getRedirectUrl();
+  const body = { email, create_user: true, redirect_to: redirectTo };
+
+  // Use PKCE if crypto.subtle is available (requires secure context)
+  if (typeof crypto !== 'undefined' && crypto.subtle) {
+    try {
+      const codeVerifier = generateCodeVerifier();
+      const codeChallenge = await generateCodeChallenge(codeVerifier);
+      body.code_challenge = codeChallenge;
+      body.code_challenge_method = 'S256';
+      try { localStorage.setItem(PKCE_VERIFIER_KEY, codeVerifier); } catch { /* skip */ }
+    } catch (err) {
+      console.warn('[auth] PKCE setup failed, falling back to implicit flow:', err);
+    }
+  } else {
+    console.warn('[auth] crypto.subtle unavailable (non-HTTPS?), using implicit flow');
+  }
+
   const res = await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'apikey': SUPABASE_ANON_KEY,
     },
-    body: JSON.stringify({
-      email,
-      create_user: true,
-      code_challenge: codeChallenge,
-      code_challenge_method: 'S256',
-      redirect_to: window.location.href.split('#')[0],
-    }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
+    const errBody = await res.text().catch(() => '');
+    console.error('[auth] OTP request failed:', res.status, errBody);
     try { localStorage.removeItem(PKCE_VERIFIER_KEY); } catch { /* skip */ }
   }
   return res.ok;
 }
 
-function renderLoginScreen() {
+function renderLoginScreen(errorMsg) {
   const app = document.querySelector('main.app');
   app.innerHTML = '';
 
@@ -2134,6 +2167,10 @@ function renderLoginScreen() {
   const sendBtn = el('button', { className: 'btn-primary', text: 'Send magic link' });
   const hint = el('p', { className: 'login-hint' });
 
+  if (errorMsg) {
+    hint.textContent = 'Sign-in link expired or was already used. Please request a new one.';
+  }
+
   emailInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendBtn.click(); });
 
   sendBtn.addEventListener('click', async () => {
@@ -2141,6 +2178,7 @@ function renderLoginScreen() {
     if (!email) { emailInput.focus(); return; }
     sendBtn.disabled = true;
     sendBtn.textContent = 'Sending...';
+    hint.textContent = '';
     try {
       const ok = await sendMagicLink(email);
       if (ok) {
@@ -2152,12 +2190,13 @@ function renderLoginScreen() {
       } else {
         sendBtn.disabled = false;
         sendBtn.textContent = 'Send magic link';
-        hint.textContent = 'Check your inbox — you may already have a link. (3 per hour limit)';
+        hint.textContent = 'Could not send link. Check the console for details.';
       }
-    } catch {
+    } catch (err) {
+      console.error('[auth] sendMagicLink error:', err);
       sendBtn.disabled = false;
       sendBtn.textContent = 'Send magic link';
-      hint.textContent = 'Check your inbox — you may already have a link. (3 per hour limit)';
+      hint.textContent = 'Could not send link. Check the console for details.';
     }
   });
 
@@ -2330,6 +2369,11 @@ function startApp() {
 // === Init ===
 async function init() {
   authSession = loadAuthSession();
+
+  // Check for Supabase auth errors in redirect URL
+  const authError = extractRedirectError();
+  if (authError) console.error('[auth] Redirect error from Supabase:', authError);
+
   const hashTokens = extractTokensFromHash();
   const pkceTokens = !hashTokens ? await exchangeCodeForTokens() : null;
   const tokens = hashTokens || pkceTokens;
@@ -2345,7 +2389,7 @@ async function init() {
 
   const isLocalOnly = localStorage.getItem(LOCAL_ONLY_KEY) === '1';
   if (!authSession && !isLocalOnly) {
-    renderLoginScreen();
+    renderLoginScreen(authError);
     return;
   }
 
