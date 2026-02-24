@@ -15,6 +15,7 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
 const AUTH_KEY = 'tc-auth';
 const LOCAL_ONLY_KEY = 'tc-local-only';
+const PKCE_VERIFIER_KEY = 'tc-pkce-verifier';
 const SUPABASE_URL = 'https://pynmkrcbkcfxifnztnrn.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_8VEm7zR0vqKjOZRwH6jimw_qIWt-RPp';
 
@@ -1997,6 +1998,36 @@ function extractTokensFromHash() {
   return { accessToken, refreshToken, expiresAt: Date.now() + expiresIn * 1000 };
 }
 
+async function exchangeCodeForTokens() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  if (!code) return null;
+  const codeVerifier = localStorage.getItem(PKCE_VERIFIER_KEY);
+  if (!codeVerifier) return null;
+  try { localStorage.removeItem(PKCE_VERIFIER_KEY); } catch { /* skip */ }
+  history.replaceState(null, '', window.location.pathname);
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=pkce`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ auth_code: code, code_verifier: codeVerifier }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.access_token || !data.refresh_token) return null;
+    return {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      expiresAt: Date.now() + (data.expires_in || 3600) * 1000,
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function fetchUser() {
   if (!authSession) return;
   try {
@@ -2050,15 +2081,40 @@ async function ensureValidToken() {
   return true;
 }
 
+function generateCodeVerifier() {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function generateCodeChallenge(verifier) {
+  const encoded = new TextEncoder().encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', encoded);
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
 async function sendMagicLink(email) {
+  const codeVerifier = generateCodeVerifier();
+  const codeChallenge = await generateCodeChallenge(codeVerifier);
+  try { localStorage.setItem(PKCE_VERIFIER_KEY, codeVerifier); } catch { /* skip */ }
   const res = await fetch(`${SUPABASE_URL}/auth/v1/otp`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'apikey': SUPABASE_ANON_KEY,
     },
-    body: JSON.stringify({ email, create_user: true, redirect_to: window.location.href.split('#')[0] }),
+    body: JSON.stringify({
+      email,
+      create_user: true,
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
+      redirect_to: window.location.href.split('#')[0],
+    }),
   });
+  if (!res.ok) {
+    try { localStorage.removeItem(PKCE_VERIFIER_KEY); } catch { /* skip */ }
+  }
   return res.ok;
 }
 
@@ -2275,8 +2331,10 @@ function startApp() {
 async function init() {
   authSession = loadAuthSession();
   const hashTokens = extractTokensFromHash();
-  if (hashTokens) {
-    authSession = { ...hashTokens };
+  const pkceTokens = !hashTokens ? await exchangeCodeForTokens() : null;
+  const tokens = hashTokens || pkceTokens;
+  if (tokens) {
+    authSession = { ...tokens };
     saveAuthSession(authSession);
     await fetchUser();
   } else if (authSession && !authSession.userId) {
