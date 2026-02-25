@@ -1075,12 +1075,14 @@ function renderViewNav() {
   ];
 
   views.forEach(v => {
+    const isActive = v.key === currentView;
     const btn = el('button', {
-      className: `view-tab${v.key === currentView ? ' active' : ''}`,
+      className: `view-tab${isActive ? ' active' : ''}`,
       role: 'tab',
       ariaLabel: v.label,
     });
-    btn.setAttribute('aria-selected', v.key === currentView ? 'true' : 'false');
+    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    btn.setAttribute('tabindex', isActive ? '0' : '-1');
     btn.dataset.view = v.key;
     btn.appendChild(document.createTextNode(v.label));
 
@@ -1096,9 +1098,24 @@ function renderViewNav() {
     btn.addEventListener('click', () => {
       currentView = v.key;
       editingId = null;
+      window.scrollTo(0, 0);
       renderWithTransition();
     });
     nav.appendChild(btn);
+  });
+
+  nav.addEventListener('keydown', e => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    e.preventDefault();
+    const tabs = [...nav.querySelectorAll('.view-tab')];
+    const current = tabs.findIndex(t => t.classList.contains('active'));
+    let next;
+    if (e.key === 'ArrowRight') next = (current + 1) % tabs.length;
+    else if (e.key === 'ArrowLeft') next = (current - 1 + tabs.length) % tabs.length;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = tabs.length - 1;
+    tabs[next].click();
+    tabs[next].focus();
   });
 }
 
@@ -2348,11 +2365,6 @@ function startApp() {
       if (e.target.matches('input, textarea, select')) return;
       e.preventDefault();
       undo();
-    }
-    // ? — open GitHub repo
-    if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-      if (e.target.matches('input, textarea, select')) return;
-      window.open('https://github.com/snackdriven/tender-circuit', '_blank', 'noopener');
     }
   });
 
