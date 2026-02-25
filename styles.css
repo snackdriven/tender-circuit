@@ -56,7 +56,7 @@
     /* Radii */
     --radius-sm: 6px;
     --radius-md: 10px;
-    --radius-lg: 16px;
+    --radius-lg: 20px;
     --radius-full: 999px;
 
     /* Touch target minimum */
@@ -71,6 +71,7 @@
     --text-tab:  clamp(0.78rem, 0.7rem + 0.5vw, 0.85rem); /* fluid tab / toggle button text */
     --text-lg:   clamp(1.5rem, 1.25rem + 1vw, 2rem); /* header h1 */
     --text-xl:   clamp(1.75rem, 1.5rem + 1vw, 2.25rem); /* login title */
+    --text-section: 0.75rem;                          /* section headings — DM Mono uppercase */
 
     color-scheme: dark;
   }
