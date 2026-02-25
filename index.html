@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <a href="#content" class="skip-link">Skip to content</a>
   <main class="app" role="main">
     <header>
       <h1>Planner</h1>
@@ -34,8 +35,8 @@
 
   <div class="toast-container" id="toast-container" role="status" aria-live="polite"></div>
 
-  <dialog class="confirm-dialog" id="delete-dialog">
-    <p class="confirm-dialog-title">Delete item</p>
+  <dialog class="confirm-dialog" id="delete-dialog" aria-labelledby="delete-dialog-title" aria-describedby="delete-dialog-text">
+    <h2 class="confirm-dialog-title" id="delete-dialog-title">Delete item</h2>
     <p class="confirm-dialog-text" id="delete-dialog-text"></p>
     <div class="confirm-dialog-actions">
       <button class="confirm-cancel-btn" id="delete-dialog-cancel">Cancel</button>
