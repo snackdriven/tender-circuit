@@ -158,8 +158,9 @@
   .view-tab {
     flex: 0 0 auto;
     padding-block: var(--space-sm);
-    padding-inline: var(--space-md);
+    padding-inline: var(--space-lg);
     border: none;
+    border-block-end: 2px solid transparent;
     border-radius: var(--radius-sm);
     background: transparent;
     color: var(--ctp-overlay1);
@@ -167,19 +168,19 @@
     font-size: var(--text-tab);
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s, transform 0.1s;
+    transition: color 0.2s, border-color 0.2s, transform 0.1s;
     min-block-size: var(--touch-min);
     white-space: nowrap;
     display: flex;
     align-items: center;
 
     &.active {
-      background: var(--ctp-surface0);
+      border-block-end-color: var(--ctp-mauve);
       color: var(--ctp-text);
+      font-weight: 600;
     }
 
     &:hover:not(.active) {
-      background: color-mix(in oklch, var(--ctp-surface0) 50%, transparent);
       color: var(--ctp-subtext0);
     }
 
@@ -1304,8 +1305,8 @@
     padding-inline: var(--space-xs);
     block-size: 18px;
     border-radius: var(--radius-full);
-    background: color-mix(in oklch, var(--ctp-mauve) 20%, transparent);
-    color: var(--ctp-mauve);
+    background: color-mix(in oklch, var(--ctp-lavender) 20%, transparent);
+    color: var(--ctp-lavender);
     font-size: var(--text-2xs);
     font-weight: 600;
     margin-inline-start: var(--space-xs);
@@ -1313,7 +1314,7 @@
   }
 
   .view-tab.active .tab-count-badge {
-    background: color-mix(in oklch, var(--ctp-mauve) 25%, transparent);
+    background: color-mix(in oklch, var(--ctp-lavender) 25%, transparent);
   }
 
   /* Window toggle row (Active view) */
