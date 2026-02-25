@@ -1502,6 +1502,24 @@
       background: var(--ctp-surface0);
     }
   }
+
+  /* Desktop: wider container + 2-column card grid */
+  @media (min-width: 48rem) {
+    main.app {
+      max-inline-size: 52rem;
+      padding: var(--space-3xl) var(--space-xl);
+    }
+
+    .item-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-sm);
+    }
+
+    .form-row {
+      flex-wrap: nowrap;
+    }
+  }
 }
 
 @layer a11y {
