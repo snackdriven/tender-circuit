@@ -760,7 +760,8 @@
     transition: background 0.2s, opacity 0.2s, transform 0.1s;
 
     &.completed {
-      opacity: 0.55;
+      opacity: 0.5;
+      transform: scale(0.99);
 
       & .item-title {
         text-decoration: line-through;
@@ -774,26 +775,26 @@
     }
 
     &:active {
-      background: color-mix(in oklch, var(--ctp-surface0), var(--ctp-surface1) 40%);
+      background: var(--ctp-surface1);
       transform: scale(0.995);
     }
   }
 
   .event-card {
-    box-shadow: inset 3px 0 0 0 var(--ctp-peach);
+    box-shadow: inset 3px 0 0 0 var(--ctp-sapphire);
   }
 
   .task-card {
-    box-shadow: inset 3px 0 0 0 var(--ctp-overlay0);
+    box-shadow: inset 3px 0 0 0 var(--ctp-overlay1);
   }
 
   .task-card.overdue {
-    background: color-mix(in oklch, var(--ctp-red) 6%, var(--ctp-surface0));
     box-shadow: inset 3px 0 0 0 var(--ctp-red);
   }
 
   .task-card.waiting {
     opacity: 0.65;
+    box-shadow: inset 3px 0 0 0 var(--ctp-yellow);
   }
 
   .item-content {
