@@ -1221,8 +1221,9 @@
 
   .calendar-mode-btn {
     padding-block: var(--space-sm);
-    padding-inline: var(--space-md);
+    padding-inline: var(--space-lg);
     border: none;
+    border-block-end: 2px solid transparent;
     border-radius: var(--radius-sm);
     background: transparent;
     color: var(--ctp-overlay1);
@@ -1230,16 +1231,16 @@
     font-size: var(--text-tab);
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s, transform 0.1s;
+    transition: color 0.2s, border-color 0.2s, transform 0.1s;
     min-block-size: var(--touch-min);
 
     &.active {
-      background: var(--ctp-surface0);
+      border-block-end-color: var(--ctp-mauve);
       color: var(--ctp-text);
+      font-weight: 600;
     }
 
     &:hover:not(.active) {
-      background: color-mix(in oklch, var(--ctp-surface0) 50%, transparent);
       color: var(--ctp-subtext0);
     }
 
