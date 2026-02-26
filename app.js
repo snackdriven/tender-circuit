@@ -2369,7 +2369,7 @@ function startApp() {
     // ? — open GitHub repo
     if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
       if (e.target.matches('input, textarea, select')) return;
-      window.open('https://github.com/snackdriven/tender-circuit', '_blank', 'noopener');
+      window.open('https://github.com/snackdriven/tender-circuit', '_blank', 'noopener,noreferrer');
     }
   });
 
